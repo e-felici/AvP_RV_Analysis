@@ -1,7 +1,41 @@
 #!/usr/bin/Rscript
 
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+  install.packages("dplyr")
+}
+if (!requireNamespace("tidyr", quietly = TRUE)) {
+  install.packages("tidyr")
+}
+if (!requireNamespace("purrr", quietly = TRUE)) {
+  install.packages("purrr")
+}
+if (!requireNamespace("readr", quietly = TRUE)) {
+  install.packages("readr")
+}
+if (!requireNamespace("stringr", quietly = TRUE)) {
+  install.packages("stringr")
+}
+if (!requireNamespace("tibble", quietly = TRUE)) {
+  install.packages("tibble")
+}
+if (!requireNamespace("magrittr", quietly = TRUE)) {
+  install.packages("magrittr")
+}
+if (!requireNamespace("forcats", quietly = TRUE)) {
+  install.packages("forcats")
+}
+
+
 #load library
-library(tidyverse)
+library("dplyr")
+library("tidyr")
+library("readr")
+library("purrr")
+library("tibble")
+library("stringr")
+library("forcats")
+library("magrittr")
+
 
 # Get the command line arguments
 args <- commandArgs(TRUE)
