@@ -20,7 +20,7 @@
 #                    -VFDB_full
 #                 For more details, see: https://www.ncbi.nlm.nih.gov/books/NBK279690/ 
 # Author:         M. Esperanza Felici
-# Usage:          ./0.DB_creation.sh
+# Usage:          ./0.DB_creation.sh <path/to/database_directory>
 # =====================================================================
 
 ####Exit on error, unset variables, or pipe failures
@@ -29,7 +29,7 @@ set -euo pipefail
 
 ####Functions
 usage() {
-    echo "Usage: $0 <database_directory>"
+    echo "Usage: $0 <path/to/database_directory>"
     echo
     echo "This script iterates through subdirectories of a specified directory,"
     echo "searches for FASTA (*.faa) files, and creates BLAST protein databases with them."
