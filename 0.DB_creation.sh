@@ -23,22 +23,79 @@
 # Usage:          ./0.DB_creation.sh
 # =====================================================================
 
+####Exit on error, unset variables, or pipe failures
+set -euo pipefail
 
 
-echo "************* BLASTp Databases Creation  *************"
+####Functions
+usage() {
+    echo "Usage: $0 <database_directory>"
+    echo
+    echo "This script iterates through subdirectories of a specified directory,"
+    echo "searches for FASTA (*.faa) files, and creates BLAST protein databases with them."
+    echo
+    echo "Arguments:"
+    echo "  database_directory   The directory containing subdirectories with FASTA files."
+    echo
+    exit 1
+}
 
-#Define the directory for the databases. This is the directory where each folder has a fasta file for the database creation
-DBDIR="/path/to/your/directory"
+#Print a log message with a timestamp
+log_message() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+}
 
-cd "$DBDIR"
+#Process subdirectories, check for FASTA files (*.faa), and create a BLAST protein database from them
+create_blast_db() {
+    local subdir="$1"
+    log_message "Processing subdirectory: $subdir"
 
-for subdir in *
-do 
+    pushd "$subdir" > /dev/null
 
-	echo "Create database for $subdir"
-	cd $subdir
+    # Check if there are any .faa files
+    if ls *.faa > /dev/null 2>&1; then
+        for fasta_file in *.faa; do
+            local db_name="${fasta_file%.faa}_db"  # Use the fasta file name as a base for the database name
+            log_message "Creating BLAST database for $subdir using $fasta_file..."
+            if makeblastdb -in "$fasta_file" -out "$db_name" -dbtype prot -title "$db_name" -parse_seqids; then
+                log_message "Successfully created BLAST database: $db_name"
+            else
+                log_message "Error creating BLAST database for $fasta_file in $subdir"
+            fi
+        done
+    else
+        log_message "No FASTA (*.faa) files found in $subdir. Skipping."
+    fi
 
-	makeblastdb -in *.faa -out "$subdir"_db -dbtype prot -title "$subdir"_db -parse_seqids
+    popd > /dev/null
+}
 
-	cd "$DBDIR"
+####Main Script
+#Check if the user provided the required directory argument
+if [[ $# -ne 1 ]]; then
+    usage
+fi
+
+#Assign the first command-line argument ($1) to the variable DBDIR
+DBDIR="$1"
+
+#Directory Existence Check
+if [[ ! -d "$DBDIR" ]]; then
+    echo "Error: Directory $DBDIR does not exist."
+    usage
+fi
+
+#Starting
+log_message "Starting BLAST database creation in directory: $DBDIR"
+
+#If an item is a subdirectory, it calls the create_blast_db() function to process it and create a BLAST database
+for subdir in "$DBDIR"/*; do
+    if [[ -d "$subdir" ]]; then
+        create_blast_db "$subdir"
+    else
+        log_message "Skipping non-directory entry: $subdir"
+    fi
 done
+
+#Ending
+log_message "Finished creating BLAST databases."
