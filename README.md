@@ -4,8 +4,7 @@ This repository contains the scripts and workflows used in the identification an
 
 ## Requirements
 
-### Software
-The following tools and libraries are required to run the analyses:
+### Software Requirements
 
 - **Operating System:**
   The scripts were developed and tested on Ubuntu 22.04, but they have also been verified to work on Ubuntu 20.04.
