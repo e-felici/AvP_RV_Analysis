@@ -1,19 +1,27 @@
 #!/usr/bin/Rscript
 
-library(tidyverse)
+#load library
+library("dplyr")
+library("tidyr")
+library("readr")
+library("purrr")
+library("tibble")
+library("stringr")
+library("forcats")
+library("magrittr")
 
 # Get the command line arguments
-args <- commandArgs(TRUE)
+args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
+if (length(args) != 2) {
+  stop("Two arguments are required!")
+}
 
-# Get the folder argument
-subdir <- args[1]
-
-#Here do not forget to define the home directory
-home <- "/path/to/directory/"
+MAIN <- args[1]
+subdir <- args[2]
 
 tryCatch({
   #Read files and extract info
-  file_list <- list.files(paste0(home, "/WorkDir/", subdir,"/Final_results/"), 
+  file_list <- list.files(paste0(MAIN, "/", subdir,"/Final_results/"), 
                       full.names = T)
 
   # Read all files and assign tibbles named after the files (without extensions)
@@ -23,10 +31,10 @@ tryCatch({
   
   # Join all tibbles by the "ID" column
   ALL <- file_tibbles %>%
-    reduce(full_join, by = "ID")  # Use "by = 'ID'" to specify the common column
+    reduce(full_join, by = "ID")  
 
 # Write the final results to a TSV file
-write_tsv(ALL, paste0(home, "/WorkDir/", subdir, "/Final_Results-", subdir, ".tsv"))
+write_tsv(ALL, paste0(MAIN, "/", subdir, "/Final_Results-", subdir, ".tsv"))
 rm(list = ls())
 
 }, 
