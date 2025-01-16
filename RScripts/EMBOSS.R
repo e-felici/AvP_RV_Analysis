@@ -1,31 +1,5 @@
 #!/usr/bin/Rscript
 
-if (!requireNamespace("dplyr", quietly = TRUE)) {
-  install.packages("dplyr")
-}
-if (!requireNamespace("tidyr", quietly = TRUE)) {
-  install.packages("tidyr")
-}
-if (!requireNamespace("purrr", quietly = TRUE)) {
-  install.packages("purrr")
-}
-if (!requireNamespace("readr", quietly = TRUE)) {
-  install.packages("readr")
-}
-if (!requireNamespace("stringr", quietly = TRUE)) {
-  install.packages("stringr")
-}
-if (!requireNamespace("tibble", quietly = TRUE)) {
-  install.packages("tibble")
-}
-if (!requireNamespace("magrittr", quietly = TRUE)) {
-  install.packages("magrittr")
-}
-if (!requireNamespace("forcats", quietly = TRUE)) {
-  install.packages("forcats")
-}
-
-
 #load library
 library("dplyr")
 library("tidyr")
@@ -36,22 +10,20 @@ library("stringr")
 library("forcats")
 library("magrittr")
 
-
-
 # Get the command line arguments
-args <- commandArgs(TRUE)
+args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
+if (length(args) != 2) {
+  stop("Two arguments are required!")
+}
 
-# Get the folder argument
-subdir <- args[1]
-
-#Here do not forget to define the home directory
-home <- "/path/to/directory/"
+MAIN <- args[1]
+subdir <- args[2]
 
 cat("Filtering, cleaning, and sorting EMBOSS results\n")
 
 tryCatch({
   # Read raw results 
-  lines <- readLines(paste0(home, "/WorkDir/", subdir, "/EMBOSS_results/EMBOSS-", subdir))
+  lines <- readLines(paste0(MAIN, "/", subdir, "/EMBOSS_results/EMBOSS-", subdir))
   
   #Extract and polish the IDs
   IDs <- lines[grep("PEPSTATS", lines)] %>% strsplit((" ")[[1]][3]) %>% unlist() %>% as_tibble()
@@ -101,13 +73,11 @@ tryCatch({
                                  "50-100 kDa"),
                           "< 50 kDa")
   
-  
-  
   #Arrange results
   EMBOSS <- arrange(EMBOSS, ID)
   
   #Write the final results to TSV
-  write_tsv(EMBOSS, paste0(home, "/WorkDir/", subdir, "/Final_results/EMBOSS-", subdir, "-final.tsv"))
+  write_tsv(EMBOSS, paste0(MAIN, "/", subdir, "/Final_results/EMBOSS-", subdir, "-final.tsv"))
   rm(list = ls())
 }, error = function(e) {
   warning(paste0("Error arranging results from EMBOSS: ", conditionMessage(e)))
