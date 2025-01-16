@@ -43,8 +43,8 @@ This repository contains the scripts and workflows used in the identification an
 
 ### Data
 - Genomic sequences of *A. paragallinarum* strains from [NCBI](https://www.ncbi.nlm.nih.gov/datasets/genome/?taxon=728)
-- [DEG (Database of Essential Genes) Bacteria v. 10](http://origin.tubic.org/deg/public/index.php/download)
-- [VFDB (Virulence Factor Database) full (set B)](https://www.mgc.ac.cn/VFs/download.htm)
+- [DEG](http://origin.tubic.org/deg/public/index.php/download) (Database of Essential Genes) Bacteria v. 10
+- [VFDB](https://www.mgc.ac.cn/VFs/download.htm) (Virulence Factor Database) full (set B)
 - COG preformatted database from the "little_endian" directory (Cog_LE.tar.gz) and summary information about the CD models (cddid.tbl.gz) from the [CDD FTP-archive](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/)
 - Descriptions of COG (cog-20.def.tab) and COG functional categories (fun-20.tab) from the [COG2020 FTP-archive](https://ftp.ncbi.nih.gov/pub/COG/COG2020/)
 
