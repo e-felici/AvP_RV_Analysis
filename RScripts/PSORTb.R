@@ -1,31 +1,5 @@
 #!/usr/bin/Rscript
 
-if (!requireNamespace("dplyr", quietly = TRUE)) {
-  install.packages("dplyr")
-}
-if (!requireNamespace("tidyr", quietly = TRUE)) {
-  install.packages("tidyr")
-}
-if (!requireNamespace("purrr", quietly = TRUE)) {
-  install.packages("purrr")
-}
-if (!requireNamespace("readr", quietly = TRUE)) {
-  install.packages("readr")
-}
-if (!requireNamespace("stringr", quietly = TRUE)) {
-  install.packages("stringr")
-}
-if (!requireNamespace("tibble", quietly = TRUE)) {
-  install.packages("tibble")
-}
-if (!requireNamespace("magrittr", quietly = TRUE)) {
-  install.packages("magrittr")
-}
-if (!requireNamespace("forcats", quietly = TRUE)) {
-  install.packages("forcats")
-}
-
-
 #load library
 library("dplyr")
 library("tidyr")
@@ -36,31 +10,28 @@ library("stringr")
 library("forcats")
 library("magrittr")
 
-
-
 # Get the command line arguments
-args <- commandArgs(TRUE)
+args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
+if (length(args) != 2) {
+  stop("Two arguments are required!")
+}
 
-# Get the folder argument
-subdir <- args[1]
-
-#Here do not forget to define the home directory
-home <- "/path/to/directory"
-
+MAIN <- args[1]
+subdir <- args[2]
 # Display message to indicate the start of the process
 cat("Filtering, cleaning, and sorting PSORTb results\n")
 
 # Use tryCatch to handle errors during the process
 tryCatch({
   # Get the list of files matching the specific pattern in the "PSORTb_results" directory
-  lines <- list.files(paste0(home, "/WorkDir/", subdir,"/PSORTb_results/"), 
+  lines <- list.files(paste0(MAIN, "/", subdir,"/PSORTb_results/"), 
                       pattern = "_psortb_gramneg.txt", 
                       full.names = F)
   
   # Ensure exactly one file is found; otherwise, handle the error
   if (length(lines) == 1) {
     # Read the raw results
-    tibbler <- read.delim(paste0(home, "/WorkDir/", subdir,"/PSORTb_results/",lines[1]),
+    tibbler <- read.delim(paste0(MAIN, "/", subdir,"/PSORTb_results/",lines[1]),
                           header = TRUE, sep = "\t")
     
     #Polish results
@@ -81,7 +52,7 @@ tryCatch({
     tibbler <- arrange(tibbler, ID)
     
     # Write the cleaned and processed data to a new TSV file
-    write_tsv(tibbler, paste0(home, "/WorkDir/", subdir, "/Final_results/PSORTb-", subdir, "-final.tsv"))
+    write_tsv(tibbler, paste0(MAIN, "/", subdir, "/Final_results/PSORTb-", subdir, "-final.tsv"))
     rm(list = ls())
     
   } else {
