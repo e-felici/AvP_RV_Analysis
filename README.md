@@ -16,7 +16,7 @@ This repository contains the scripts and workflows used in the identification an
      - [Bioconductor](https://www.bioconductor.org/)
      - [rlang](https://rlang.r-lib.org/)
      - [Rpdb](https://cran.r-project.org/web/packages/Rpdb/index.html)
-     - [BALCONY](https://cran.r-project.org/src/contrib/Archive/BALCONY/)(See [install_packages.R script)](https://github.com/e-felici/AvP-Analysis/blob/main/install_packages.R) to install this)
+     - [BALCONY](https://cran.r-project.org/src/contrib/Archive/BALCONY/) (See [install_packages.R script)](https://github.com/e-felici/AvP-Analysis/blob/main/install_packages.R) to install this)
        
   - Python (at least v. 3.9.12) and these python packages:
 
