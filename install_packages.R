@@ -35,6 +35,9 @@ if (!requireNamespace("forcats", quietly = TRUE)) {
 if (!requireNamespace("seqinr", quietly = TRUE)) {
   install.packages("seqinr")
 }
+if (!requireNamespace("rlang", quietly = TRUE)) {
+  install.packages("rlang")
+}
 if (!requireNamespace("Rpdb", quietly = TRUE)) {
   install.packages("Rpdb")
 }
