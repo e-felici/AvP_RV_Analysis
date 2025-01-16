@@ -15,7 +15,7 @@ This repository contains the scripts and workflows used in the identification an
   - Python v. 3.9.12 and these python packages:
 
     - [pyperclip v. 1.9.0](https://pypi.org/project/pyperclip/)
-    -[Selenium WebDriver v. 4.27.1](https://pypi.org/project/selenium/)
+    - [Selenium WebDriver v. 4.27.1](https://pypi.org/project/selenium/)
 
 
 - **Bioinformatics Tools:**
