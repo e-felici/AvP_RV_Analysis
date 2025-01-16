@@ -1,48 +1,5 @@
 #!/usr/bin/Rscript
 
-#Define path to BALCONY_0.2.10.tar.gz
-BALCONY_path <- "/home/yagui/BALCONY_0.2.10.tar.gz"
-
-#Load libraries
-if (!requireNamespace("dplyr", quietly = TRUE)) {
-  install.packages("dplyr")
-}
-if (!requireNamespace("tidyr", quietly = TRUE)) {
-  install.packages("tidyr")
-}
-if (!requireNamespace("purrr", quietly = TRUE)) {
-  install.packages("purrr")
-}
-if (!requireNamespace("readr", quietly = TRUE)) {
-  install.packages("readr")
-}
-if (!requireNamespace("stringr", quietly = TRUE)) {
-  install.packages("stringr")
-}
-if (!requireNamespace("tibble", quietly = TRUE)) {
-  install.packages("tibble")
-}
-if (!requireNamespace("magrittr", quietly = TRUE)) {
-  install.packages("magrittr")
-}
-if (!requireNamespace("forcats", quietly = TRUE)) {
-  install.packages("forcats")
-}
-if (!requireNamespace("seqinr", quietly = TRUE)) {
-  install.packages("seqinr")
-}
-if (!requireNamespace("Rpdb", quietly = TRUE)) {
-  install.packages("Rpdb")
-}
-if (!requireNamespace("Biostrings", quietly = T)) {
-  if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-  BiocManager::install("Biostrings")
-}
-if (!requireNamespace("BALCONY", quietly = T)) {
-  install.packages(BALCONY_path, repos = NULL, type="source")
-}
-
 #load library
 library("dplyr")
 library("tidyr")
@@ -55,21 +12,29 @@ library("magrittr")
 library("seqinr")
 library("BALCONY")
 
-#DO NOT FORGET: Define HOME folder
-home <- "/path/to/directory/"
+# Get the command line arguments
+args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
+if (length(args) != 3) {
+  stop("Three arguments are required!")
+}
+
+ConsDir <- args[1]
+FinalRes <- args[2]
+WorkDir <- args[3]
+
 
 cat("Production of entropy (conservation) and strain count results\n")
 
 tryCatch({
 #Retrieve all needed files 
 #IDs
-ID_files = list.files(paste0(home,"/ConsDir/Mafft_Results/IDs/"), full.names = F)
+ID_files = list.files(paste0(ConsDir, "/Mafft_Results/IDs/"), full.names = F)
 
 #Alignments in fasta format
-Aln_files = list.files(paste0(home,"/ConsDir/Mafft_Results/Fasta/"), full.names = FALSE)
-Aln_filePath = paste0(home,"/ConsDir/Mafft_Results/Fasta/", Aln_files)
+Aln_files = list.files(paste0(ConsDir, "/Mafft_Results/Fasta/"), full.names = FALSE)
+Aln_filePath = paste0(ConsDir, "/Mafft_Results/Fasta/", Aln_files)
 
-subfolders <- list.dirs(paste0(home, "/WorkDir"), full.names = TRUE, 
+subfolders <- list.dirs(WorkDir, full.names = TRUE, 
                         recursive = FALSE)
 
 # Count the number of subfolders
@@ -153,7 +118,7 @@ for (i in i:length(IDs)) {
   cluster = Tibble[position, 1] %>% unlist() %>% unname()
   
   # Open the corresponding file and read its contents as a TSV file.
-  Temp_Tibble = read_tsv(paste0(home,"/ConsDir/Mafft_Results/IDs/",ID_files[i]), col_names = FALSE)
+  Temp_Tibble = read_tsv(paste0(ConsDir,"/Mafft_Results/IDs/",ID_files[i]), col_names = FALSE)
   
   colnames(Temp_Tibble)[1] = c("ID")
   
@@ -189,7 +154,7 @@ final_results$Conservation_Results <- ifelse(final_results$Strain_count > num_su
 final_results$ID <- final_results$ID %>% str_replace("\\.1", "")
 
 # Save the final results
-write_tsv(final_results, paste0(home,"/ConsDir/Conservation_final_results.tsv"))
+write_tsv(final_results, paste0(FinalRes,"/Conservation_results.tsv"))
 
 rm(list = ls())
 
