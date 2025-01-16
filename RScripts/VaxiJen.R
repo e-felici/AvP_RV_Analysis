@@ -1,28 +1,33 @@
 #!/usr/bin/Rscript
 
-library(tidyverse)
+#load library
+library("dplyr")
+library("tidyr")
+library("readr")
+library("purrr")
+library("tibble")
+library("stringr")
+library("forcats")
+library("magrittr")
 
 # Get the command line arguments
-args <- commandArgs(TRUE)
+args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
+if (length(args) != 2) {
+  stop("Two arguments are required!")
+}
 
-# Get the folder argument
-subdir <- args[1]
-
-#Here do not forget to define the home directory
-home <- "/path/to/directory/"
+MAIN <- args[1]
+subdir <- args[2]
 
 cat("Filtering, cleaning, and sorting VaxiJen results\n")
 
 tryCatch({
   #Read files
       #VaxiJen results
-  vaxijen_data <- as_tibble(read_table(paste0(home, "/WorkDir/", subdir, "/VaxiJen_results/VaxiJen3_predictions.csv"),
+  vaxijen_data <- as_tibble(read_table(paste0(MAIN, "/", subdir, "/VaxiJen_results/VaxiJen3_predictions.csv"),
                              col_names = c("ID", "X2", "X3", "X4", "X5", "AntigenicityResult", "X7", "X8", "X9")))
-      #Protein IDs
-  IDs <- read_tsv(paste0(home, "/WorkDir/", subdir, "/AllProteinIds-",subdir,".txt"), col_names = "ID")
-
   #Rare aminoacids
-  RareAA <- read_tsv(paste0(home, "/WorkDir/", subdir, "/VaxiJen_results/IDs_RareAminoAcids"), col_names = "ID")
+  RareAA <- read_tsv(paste0(MAIN, "/", subdir, "/VaxiJen_results/IDs_RareAminoAcids"), col_names = "ID")
   RareAA$AntigenicityResult <- "-"
   
   # Extracting IDs
@@ -44,7 +49,7 @@ Results <- arrange(Results, ID) %>%
   distinct(ID, .keep_all = TRUE)
 Results$ID <- Results$ID %>% str_replace("\\.1", "")
 
-write_tsv(Results, paste0(home, "/WorkDir/", subdir,"/Final_results/VaxiJen-", subdir, "-final.tsv"))
+write_tsv(Results, paste0(MAIN, "/",  subdir,"/Final_results/VaxiJen-", subdir, "-final.tsv"))
 
 rm(list = ls())
 }, 
