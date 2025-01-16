@@ -11,8 +11,14 @@ This repository contains the scripts and workflows used in the identification an
 
 
 - **Programming Languages and Packages/Libraries:**
-  - R v. 4.4.1 (with tidyverse and Bioconductor packages, see install_packages.R script)
-  - Python v. 3.9.12 and these python packages:
+  - R (at least v. 4.4.1) and these R packages:
+     - [tidyverse](https://www.tidyverse.org/)
+     - [Bioconductor](https://www.bioconductor.org/)
+     - [rlang](https://rlang.r-lib.org/)
+     - [Rpdb](https://cran.r-project.org/web/packages/Rpdb/index.html)
+     - [BALCONY](https://cran.r-project.org/src/contrib/Archive/BALCONY/)(See [install_packages.R script)](https://github.com/e-felici/AvP-Analysis/blob/main/install_packages.R) to install this)
+       
+  - Python (at least v. 3.9.12) and these python packages:
 
     - [pyperclip v. 1.9.0](https://pypi.org/project/pyperclip/)
     - [Selenium WebDriver v. 4.27.1](https://pypi.org/project/selenium/)
