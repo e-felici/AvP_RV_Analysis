@@ -13,8 +13,9 @@ This repository contains the scripts and workflows used in the identification an
 - **Programming Languages and Packages/Libraries:**
   - R v. 4.4.1 (with tidyverse and Bioconductor packages, see install_packages.R script)
   - Python v. 3.9.12 and these python packages:
-           - [pyperclip v. 1.9.0](https://pypi.org/project/pyperclip/)
-           -[Selenium WebDriver v. 4.27.1](https://pypi.org/project/selenium/)
+
+    - [pyperclip v. 1.9.0](https://pypi.org/project/pyperclip/)
+    -[Selenium WebDriver v. 4.27.1](https://pypi.org/project/selenium/)
 
 
 - **Bioinformatics Tools:**
