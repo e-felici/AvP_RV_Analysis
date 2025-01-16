@@ -39,10 +39,10 @@ This repository contains the scripts and workflows used in the identification an
 
 - **Other Tools**
    - [Chrome browser](https://www.google.com/intl/en_uk/chrome/)
-   - [A ChromeDriver binary (compatible with your Chrome version)](https://googlechromelabs.github.io/chrome-for-testing/#stable)
+   - [A ChromeDriver binary](https://googlechromelabs.github.io/chrome-for-testing/#stable) (compatible with your Chrome version)
 
 ### Data
-- [Genomic sequences of *A. paragallinarum* strains](https://www.ncbi.nlm.nih.gov/datasets/genome/?taxon=728)
+- Genomic sequences of *A. paragallinarum* strains from [NCBI](https://www.ncbi.nlm.nih.gov/datasets/genome/?taxon=728)
 - [DEG (Database of Essential Genes) Bacteria v. 10](http://origin.tubic.org/deg/public/index.php/download)
 - [VFDB (Virulence Factor Database) full (set B)](https://www.mgc.ac.cn/VFs/download.htm)
 - COG preformatted database from the "little_endian" directory (Cog_LE.tar.gz) and summary information about the CD models (cddid.tbl.gz) from the [CDD FTP-archive](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/)
