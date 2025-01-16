@@ -1,30 +1,5 @@
 #!/usr/bin/Rscript
 
-if (!requireNamespace("dplyr", quietly = TRUE)) {
-  install.packages("dplyr")
-}
-if (!requireNamespace("tidyr", quietly = TRUE)) {
-  install.packages("tidyr")
-}
-if (!requireNamespace("purrr", quietly = TRUE)) {
-  install.packages("purrr")
-}
-if (!requireNamespace("readr", quietly = TRUE)) {
-  install.packages("readr")
-}
-if (!requireNamespace("stringr", quietly = TRUE)) {
-  install.packages("stringr")
-}
-if (!requireNamespace("tibble", quietly = TRUE)) {
-  install.packages("tibble")
-}
-if (!requireNamespace("magrittr", quietly = TRUE)) {
-  install.packages("magrittr")
-}
-if (!requireNamespace("forcats", quietly = TRUE)) {
-  install.packages("forcats")
-}
-
 #load library
 library("dplyr")
 library("tidyr")
@@ -36,17 +11,17 @@ library("forcats")
 library("magrittr")
 
 # Get the command line arguments
-args <- commandArgs(TRUE)
+args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
+if (length(args) != 2) {
+  stop("Two arguments are required!")
+}
 
-# Get the folder argument
-subdir <- args[1]
-
-#Here do not forget to define the home directory
-home <- "/path/to/directory/"
+MAIN <- args[1]
+subdir <- args[2]
 
 tryCatch({
   #Read files and extract info
-  Info <- read_lines(paste0(home, "/WorkDir/", subdir, "/protein.faa")) %>%
+  Info <- read_lines(paste0(MAIN, "/", subdir, "/protein.faa")) %>%
         keep(~ str_starts(.x, ">")) %>%
         tibble(Full_Header = .)  %>%
     mutate(
@@ -66,7 +41,7 @@ tryCatch({
   Info$ID <- Info$ID %>% str_replace("\\.1", "")
   
   # Write the final results to a TSV file
-  write_tsv(Info, paste0(home, "/WorkDir/", subdir, "/Final_results/Info-", subdir, "-final.tsv"))
+  write_tsv(Info, paste0(MAIN, "/", subdir, "/Final_results/Info-", subdir, "-final.tsv"))
   rm(list = ls())
 }, 
 # Catch any errors that may occur during execution
