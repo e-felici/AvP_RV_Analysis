@@ -32,7 +32,7 @@ tryCatch({
   
   # Extracting IDs
 ids <- vaxijen_data %>%
-  filter(str_detect(ID, "WP_")) %>%
+  filter(str_detect(ID, "WP_|HBL79")) %>%
   select(ID)
 
 # Extracting result
