@@ -48,7 +48,7 @@ tryCatch({
   
   #Merge
  ids <- ids %>% filter(!ID %in% raw$ID)
-  raw <- left_join(ids, raw, by=NULL)
+  raw <- full_join(ids, raw, by=NULL)
   
   
   # Write the final results to a TSV file
