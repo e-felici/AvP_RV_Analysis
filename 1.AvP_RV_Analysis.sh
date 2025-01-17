@@ -205,7 +205,7 @@ adhesin_identification() {
 
     log_message  '--------Adhesin identification with SPAAN --------'
 
-    cp "$WorkDir/$subdir_name/protein.faa" "$SPAAN"
+    cp $WorkDir/$subdir_name/protein.faa "$SPAAN"
     pushd "$SPAAN" || { log_message  "Error: Could not change directory to $SPAAN"; return 1; }
     mv protein.faa query.dat 
 
@@ -219,11 +219,14 @@ adhesin_identification() {
     # Cleaning and copying results
     mv query.out SPAAN-unpolished.txt 
     rm query.dat
-    cp SPAAN-unpolished.txt "$WorkDir/$subdir_name/SPAAN_results/"
+    cp SPAAN-unpolished.txt $WorkDir/$subdir_name/SPAAN_results/
 
     # Run R script
     if [[ -f "$RScripts/SPAAN.R" ]]; then
-        Rscript "$RScripts/SPAAN.R" "$WorkDir" "$subdir_name"
+        Rscript "$RScripts"/SPAAN.R "$WorkDir" "$subdir_name"  || {
+        log_message  "ERROR: R script failed for $subdir_name"
+        exit 1
+    }    
     else
         log_message  "Error: R script $RScripts/SPAAN.R not found."
         return 1
@@ -258,7 +261,7 @@ vaxijen() {
     done
     
     #Merge all files
-    cat "$WorkDir"/"$subdir_name"/VaxiJen_results/$subdir_name-protein_filtered.faa.split/* > "$WorkDir"/"$subdir_name"/VaxiJen_results/"VaxiJen3_predictions.csv"
+    cat "$WorkDir"/"$subdir_name"/VaxiJen_results/$subdir_name-protein_filtered.faa.split/* > "$WorkDir"/"$subdir_name"/VaxiJen_results/VaxiJen3_predictions.csv
     
     # Run R script for output processing
     Rscript "$RScripts"/VaxiJen.R "$WorkDir" "$subdir_name" || {
@@ -371,7 +374,7 @@ deeptmhmm() {
      # Separate TM characteristics
      grep -v -e "Length" -e "Number of predicted TMRs" --binary-files=text TEMP_DeepTMHMM_TM_$subdir_name.txt > TEMP_DeepTMHMM_TMbreakdown_$subdir_name.txt
      #Splitting the file based on //
-     csplit -z -s DeepTMHMM_results/TEMP_DeepTMHMM_TMbreakdown_$subdir_name.txt /\/\// '{*}'
+     csplit -z -s TEMP_DeepTMHMM_TMbreakdown_$subdir_name.txt /\/\// '{*}'
      #Moving the split files to Temporal Directory
      mv xx* TEMP
      popd
@@ -393,9 +396,9 @@ deeptmhmm() {
      popd
      
      #Returning to the folder 
-     pushd "$HOME"/WorkDir/$subdir_name/DeepTMHMM_results
+     pushd "$WorkDir"/$subdir_name/DeepTMHMM_results
      #Merging the pieces back together and cleaning up "proteins" that do not exist (derived from ending and beggining of file)
-     cat TEMP/*-all | grep -v --binary-files=text "  0  0  0  0  0  0" > DeepTMHMM_TMbreakdown_$subdir.txt
+     cat TEMP/*-all | grep -v --binary-files=text "  0  0  0  0  0  0" > DeepTMHMM_TMbreakdown_$subdir_name.txt
      
      # Clean up temporary files
      rm TEMP*
@@ -485,7 +488,7 @@ log_message  "Path to make_multi_seq.pl script from CD_HIT: $MultiSeq"
 log_message  "Path to folder in which all the conservation among strains will be stored: $ConsDir"
 log_message  "Path to the final and polished results: $FinalRes"
 log_message  "Path to the blastp databases that yoou have created with 0.DB_creation.sh script: $DBDIR"
-log_message  "Path to folder with all the R Scripts: $RScripts"
+log_message  "Path to folder with all the R Scripts to analyze the Av. paragallinarum strains: $RScripts"
 log_message  "Path to Perl script wrapper to run a docker run to execute PSORTb inside the docker container: $Psortb"
 log_message  "Path to SPAAN folder with all the files to run standalone SPAAN: $SPAAN"
 log_message  "Path to VaxiJen.py script: $VaxiJen"
