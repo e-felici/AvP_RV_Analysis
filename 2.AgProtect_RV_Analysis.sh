@@ -272,8 +272,8 @@ deeptmhmm() {
     		fi
 
         	# Move results to the corresponding folder
-        	mv $BIOLIB/predicted_topologies* "$AgProtect"/DeepTMHMM_results/predicted_topologies-$file_number
-        	mv $BIOLIB/TMRs.gff3* "$AgProtect"/DeepTMHMM_results/TMRs.gff3-$file_number
+        	mv biolib_results/predicted_topologies* "$AgProtect"/DeepTMHMM_results/predicted_topologies-$file_number
+        	mv biolib_results/TMRs.gff3* "$AgProtect"/DeepTMHMM_results/TMRs.gff3-$file_number
         	
         	# Increment file number and remove processed file
         	((file_number++))
@@ -348,7 +348,7 @@ deeptmhmm() {
      
      # Clean up temporary files
      rm TEMP*
-     rm -r TEMP
+     rm -r TEMP biolib_results
      
      # Run R script for output processing
      Rscript "$RScripts"/DeepTMHMM.R "$AgProtect" || {
