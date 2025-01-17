@@ -55,9 +55,9 @@ fi
 
 # Print the arguments 
 echo 'These are the paths that you defined:'
-echo "AgProtect: $AgProtect"
-echo "FinalRes: $FinalRes"
-echo "RScripts: $RScripts"
+echo "AgProtect folder: $AgProtect"
+echo "Final Results folder: $FinalRes"
+echo "3.Final_RV_Analysis_RScripts folder: $RScripts"
 
 
 #Executing R script
