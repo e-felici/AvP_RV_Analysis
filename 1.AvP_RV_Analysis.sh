@@ -471,6 +471,7 @@ while IFS= read -r line; do
 	12) ;;
         13) ;;
         14) ;;
+	15) ;;
         *) log_message  "Warning: File contains too many lines. Ignoring extra lines." ;;
     esac
 done < "$file"
