@@ -26,7 +26,6 @@ tryCatch({
   raw <- read_tsv(paste0(MAIN, "/", subdir, "/VFDB_full_results/", subdir, "-vs_VFDB.out"), col_names = 1:12)
       #Protein IDs
   ids <- read_tsv(paste0(MAIN, "/", subdir, "/AllProteinIds-",subdir,".txt"), col_names = "ID")
-  colnames(ids)[1] <- "ID"
   
   # Define the criteria for filtering the results
   index = ifelse(((raw$X11 < 1e-5) + (raw$X12>50) + (raw$X3 > 25)) == 3, TRUE, FALSE)
