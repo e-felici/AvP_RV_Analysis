@@ -1,1 +1,15 @@
-
+path/to/WorkDir
+path/to/make_multi_seq.pl
+path/to/Conservation_Analysis_Dir
+path/to/Final_Results_folder
+path/to/DBDIR
+path/to/1.AvP_RV_Analysis_RScripts
+path/to/Psortb
+path/to/SPAAN_folder
+path/to/VaxiJen.py
+path/to/Chromedriver_binary
+path/to/COG
+path/to/AgProtect
+path/to/2.AgProtect_RV_Analysis_RScripts
+path/to/GramAdv
+path/to/3.Final_RV_Analysis_RScripts
