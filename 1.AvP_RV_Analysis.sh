@@ -465,6 +465,9 @@ while IFS= read -r line; do
         9) VaxiJen="$line" ;;
         10) Chromedriver="$line" ;;
         11) COG="$line" ;;
+	12) ;;
+        13) ;;
+        14) ;;
         *) log_message  "Warning: File contains too many lines. Ignoring extra lines." ;;
     esac
 done < "$file"
