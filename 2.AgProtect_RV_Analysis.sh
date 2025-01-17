@@ -430,7 +430,7 @@ log_message  'These are the paths that you defined:'
 log_message  "Path to experimental antigens (AgProtect) folder (inside there is the protein.faa file)): $AgProtect"
 log_message  "Path to the final and polished results: $FinalRes"
 log_message  "Path to the blastp databases that yoou have created with 0.DB_creation.sh script: $DBDIR"
-log_message  "Path to folder with all the R Scripts to analyze AgProtect: $RScripts"
+log_message  "Path to folder with all the R Scripts to analyze AgProtect (2.AgProtect_RV_Analysis_RScripts folder): $RScripts"
 log_message  "Path to Perl script wrapper to run a docker run to execute PSORTb inside the docker container: $Psortb"
 log_message  "Path to SPAAN folder with all the files to run standalone SPAAN: $SPAAN"
 log_message  "Path to VaxiJen.py script: $VaxiJen"
