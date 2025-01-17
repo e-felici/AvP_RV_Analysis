@@ -48,6 +48,31 @@ This repository contains the scripts and workflows used in the identification an
 - COG preformatted database from the "little_endian" directory (Cog_LE.tar.gz) and summary information about the CD models (cddid.tbl.gz) from the [CDD FTP-archive](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/)
 - Descriptions of COG (cog-20.def.tab) and COG functional categories (fun-20.tab) from the [COG2020 FTP-archive](https://ftp.ncbi.nih.gov/pub/COG/COG2020/)
 
+## Usage
+0. Download all the required data. Ensure all external tools are installed and accessible in your system's PATH and install all necessary R and python packages
+
+1. Create the required blastp databases with 0.DB_creation.sh script:
+   ```bash
+   ./0.DB_creation.sh <path/to/database_directory>
+   ```
+
+2. Create a file_of_paths (See [example]()). You only need one for use in all the scripts
+
+3. Analyze the different Av. paragallinarum strains with 1.AvP_RV_Analysis.sh script:
+   ```bash
+   ./1.AvP_RV_Analysis.sh <path/to/file_of_paths>
+   ```
+
+4. Analyze the different experimentally tested antigens with 2.AgProtect_RV_Analysis.sh script
+   ```bash
+   ./2.AgProtect_RV_Analysis.sh <path/to/file_of_paths>
+   ```
+
+5. Merge and polish all the results with 3.Final_RV_Analysis.sh script
+   ```bash
+   ./3.Final_RV_Analysis.sh <path/to/file_of_paths>
+   ```
+   
 ## File Structure
 
 ```
