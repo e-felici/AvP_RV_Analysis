@@ -33,21 +33,21 @@ AllProteinIds = read_tsv(paste0(AgProtect, "/AllProteinIds-AgProtect.txt"),
 
     ##COG and CDD resources:
       #Summary info about the CD models
-cddid <- as.tibble(read_tsv(paste0(COG, "/cddid.tbl"), 
+cddid <- as_tibble(read_tsv(paste0(COG, "/cddid.tbl"), 
                             col_names = F))
       #Polish tibble
 colnames(cddid)[1] = "CDDID"
 cddid$CDDID <- as.character(cddid$CDDID)
 
       #Info about COG descriptions
-cogdef <- as.tibble(read_tsv(paste0(COG,"/cog-20.def.tab"), 
+cogdef <- as_tibble(read_tsv(paste0(COG,"/cog-20.def.tab"), 
                              col_names = F))
       #Polish tibble
 cogdef <- select(cogdef, X1, X2)
 colnames(cogdef)[1] = "COGID"
 
       #Descriptions of COG functional categories
-cogdet <- as.tibble(read_tsv(paste0(COG,"/fun-20.tab"), 
+cogdet <- as_tibble(read_tsv(paste0(COG,"/fun-20.tab"), 
                              col_names = F))
       #Polish tibble
 colnames(cogdet)[1] = "COG"
