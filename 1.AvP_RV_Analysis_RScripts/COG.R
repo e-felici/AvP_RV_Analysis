@@ -84,7 +84,7 @@ tryCatch({
   AllResults <- left_join(AllResults, cddid, by = "CDDID")
   
   # Polish data
-  AllResults <- select(AllResults, ID, CDDID, X3.y, X4, X3.x, X11, X12, X2,)
+  AllResults <- select(AllResults, ID, CDDID, X3.y, X4, X3.x, X11, X12, X2)
   colnames(AllResults)[8] = "COGID"
   
   ##From COG IDs obtain COG Functional Categories 
