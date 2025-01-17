@@ -1,7 +1,6 @@
 #!/usr/bin/Rscript
 
 #load library
-#load library
 library("dplyr")
 library("tidyr")
 library("readr")
