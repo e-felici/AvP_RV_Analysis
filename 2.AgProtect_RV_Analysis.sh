@@ -414,6 +414,7 @@ while IFS= read -r line; do
         12) AgProtect="$line" ;;
         13) RScripts="$line" ;;
         14) GramAdv="$line" ;;
+	15) RScripts="$line" ;;
         *) log_message  "Warning: File contains too many lines. Ignoring extra lines." ;;
     esac
 done < "$file"
