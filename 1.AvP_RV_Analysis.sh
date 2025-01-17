@@ -486,9 +486,9 @@ fi
 log_message  'These are the paths that you defined:'
 log_message  "Path to strains folder (where each strain is a folder, and inside each folder there is the proteome of that strain (protein.faa file)): $WorkDir"
 log_message  "Path to make_multi_seq.pl script from CD_HIT: $MultiSeq"
-log_message  "Path to folder in which all the conservation among strains will be stored: $ConsDir"
+log_message  "Path to folder in which all the conservation among strains results will be stored: $ConsDir"
 log_message  "Path to the final and polished results: $FinalRes"
-log_message  "Path to the blastp databases that yoou have created with 0.DB_creation.sh script: $DBDIR"
+log_message  "Path to the blastp databases that you have created with 0.DB_creation.sh script: $DBDIR"
 log_message  "Path to folder with all the R Scripts to analyze the Av. paragallinarum strains: $RScripts"
 log_message  "Path to Perl script wrapper to run a docker run to execute PSORTb inside the docker container: $Psortb"
 log_message  "Path to SPAAN folder with all the files to run standalone SPAAN: $SPAAN"
