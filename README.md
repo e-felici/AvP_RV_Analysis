@@ -48,6 +48,51 @@ This repository contains the scripts and workflows used in the identification an
 - COG preformatted database from the "little_endian" directory (Cog_LE.tar.gz) and summary information about the CD models (cddid.tbl.gz) from the [CDD FTP-archive](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/)
 - Descriptions of COG (cog-20.def.tab) and COG functional categories (fun-20.tab) from the [COG2020 FTP-archive](https://ftp.ncbi.nih.gov/pub/COG/COG2020/)
 
+## File Structure
+
+```
+.
+├── AgProtect_data
+│   ├── protein.faa      # Fasta file of the collection of experimentally tested antigens
+│   ├── BacteriaTypes.tsv         # Gram stain and genus of each antigen
+│   └── HostList.tsv         # Hosts for each antigen
+├── 0.DB_creation.sh
+├── 1.AvP_RV_Analysis.sh
+├── 1.AvP_RV_Analysis_RScripts
+│   ├── COG.R
+│   ├── DEG.R
+│   ├── DeepTMHMM.R
+│   ├── Final_polishing.R
+│   ├── Info.R
+│   ├── SignalP.R
+│   ├── VaxiJen.R
+│   ├── Conservation.R
+│   ├── EMBOSS.R
+│   ├── Homology_Analysis.R
+│   ├── PSORTb.R
+│   ├── SPAAN.R
+│   └── VFDB.R
+├── 2.AgProtect_RV_Analysis.sh
+├── 2.AgProtect_RV_Analysis_RScripts
+│   ├── COG_AgProtect.R
+│   ├── DEG_AgProtect.R
+│   ├── Final_polishing_AgProtect.R
+│   ├── Info_AgProtect.R
+│   ├── SignalP_AgProtect.R
+│   ├── VaxiJen_AgProtect.R
+│   ├── EMBOSS_AgProtect.R
+│   ├── Homology_Analysis_AgProtect.R
+│   ├── DeepTMHMM_AgProtect.R
+│   ├── PSORTb_AgProtect.R
+│   ├── SPAAN_AgProtect.R
+│   └── VFDB_AgProtect.R
+├── 3.Final_RV_Analysis.sh
+├── 3.Final_RV_Analysis_RScripts
+│   └──Final_merge.R
+├── VaxiJen.py
+├── Final_results        # Polished output files
+└── README.md            # Documentation
+```
 
 ## Acknowledgments
 We would like to express our gratitude to CONICET (Consejo Nacional de Investigaciones Científicas y Técnicas) and to the Universidad Nacional de Córdoba (UNC) for their support and funding.
