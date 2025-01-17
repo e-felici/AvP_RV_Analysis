@@ -26,7 +26,6 @@ tryCatch({
   raw = read_tsv(paste0(MAIN, "/", subdir, "/SPAAN_results/SPAAN-unpolished.txt"))
       #Protein IDs
   ids <- read_tsv(paste0(MAIN, "/", subdir, "/AllProteinIds-",subdir,".txt"), col_names = "ID")
-  colnames(ids)[1] <- "ID"
   
   #Polish IDs
   ids$ID <- ids$ID %>% str_replace("\\.1", "")
