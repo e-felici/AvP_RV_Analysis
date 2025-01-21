@@ -1,0 +1,112 @@
+library(tidyverse)
+library(ggplot2)
+library(ggpubr) 
+
+
+
+##### Grafico Antigénicas ####
+#filtro
+Antigenics = filter(Resultados, ChickenHomologue ==  "Non Host Homologue")
+
+
+Ag_COG = group_by(Antigenics, AntigenicityResult, Strain, COG_category_u) %>%
+  summarise("Amount of Proteins"=n()) 
+
+#agrupo
+Antigenics = group_by(Antigenics, AntigenicityResult, Strain) %>% summarise("Amount of Total Proteins"=n()) 
+
+#limpio
+Antigenics = filter(Antigenics, AntigenicityResult != "-")
+
+#Agrego el total de cada grupo
+chicken2 = filter(chicken, ChickenHomologue == "Non Host Homologue")
+Antigenics = full_join(Antigenics, chicken2, by="Strain")
+rm(chicken2)
+
+#acomodo columnas para menos confusion
+colnames(Antigenics)[3] = "AntigenicityResultAmount"
+colnames(Antigenics)[5] = "AmountOfNonHomologousProteins"
+
+Antigenics=select(Antigenics,-CantidadTotal)
+
+#agrego columna porcentaje
+Antigenics$Porcentaje = Antigenics$AntigenicityResultAmount *100 / Antigenics$AmountOfNonHomologousProteins
+Antigenics$Porcentaje_antigenics = Antigenics$AntigenicityResultAmount *100 / Grupo$CantidadTotal
+
+#calculo porcentaje de homologas
+del <- Antigenics %>% 
+  filter(AntigenicityResult == "NON-ANTIGEN",
+         Strain != "Experimental Antigens") 
+
+media <- round(mean(del$Porcentaje), digits = 2)
+
+
+#grafico
+#Grafico 2 (con porcentajes)
+p1 <- ggplot(Antigenics, aes(fill=AntigenicityResult, y=Porcentaje, x=Strain)) + 
+  geom_bar(position="stack", stat="identity", show.legend = FALSE)  + 
+  scale_fill_manual(values =c("olivedrab","#9e2f28"), 
+                    labels=c('Antigenic', 'Non Antigenic')) +
+  #scale_fill_viridis(discrete=T, begin = 0.3, end=0.65)  +
+  theme(axis.title = element_text(family = "Times New Roman", size=18, color = "black"), 
+        title = element_text(family = "Times New Roman", size=16, color = "black"), 
+        text = element_text(family = "Times New Roman", size = 16, color = "black"),
+        axis.text = element_text(family = "Times New Roman", size = 16, color = "black"),
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                        linewidth = 0.3))  +
+  coord_flip() + 
+  labs(y = "Percentage of proteins") +
+  geom_hline(yintercept = media, color = "blue")
+
+
+#guardo
+ggsave("Antigenicity2.png", device = "png", path = "~/Desktop/Graficos", 
+       width =3500, height = 2300, units="px")
+
+
+Ag_COG <- Ag_COG %>%
+  filter(AntigenicityResult != "-")
+
+#Agrego el total de cada grupo
+Ag_COG = full_join(Ag_COG, COG, by=c("Strain", "COG_category_u"))
+
+#agrego columna porcentaje
+Ag_COG$Porcentaje_ag = Ag_COG$"Amount of Proteins" *100 / Ag_COG$CantidadTotal
+
+Ag_COG= na.omit(Ag_COG)
+
+Ag_COG <- Ag_COG %>% filter(substr(Strain, 1, 3) != "Exp")
+
+
+means_ag <- Ag_COG %>%
+  group_by(COG_category_u,AntigenicityResult) %>%
+  summarize(mean_value = mean(Porcentaje_ag))
+
+p2 <- ggplot(means_ag, aes(fill=AntigenicityResult, y=mean_value, x=COG_category_u)) + 
+  geom_bar(position="stack", stat="identity") + 
+  scale_fill_manual(values =c("olivedrab","#9e2f28"),
+                    labels=c('Antigenic', 'Non Antigenic')) +
+  #scale_fill_viridis(discrete=T, begin = 0.3, end=0.65)  +
+  theme(axis.title = element_text(family = "Times New Roman"), 
+        axis.text = element_text(family = "Times New Roman", size = 18, color = "black"),
+        title = element_text(family = "Times New Roman"),
+        legend.title=element_blank(),  
+        legend.position="bottom",
+        text = element_text(family = "Times New Roman", size = 18), 
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                        linewidth = 0.3)) + 
+  labs(y = "Mean for all strains", 
+       x = "COG category")
+
+ggsave("antigenicity.png", device = "png", path = "~/Desktop/Graficos", 
+       width =3500, height = 2300, units="px")
+
+
+ggarrange(p1, p2, 
+          labels = c("3A", "3B"),
+          ncol = 2, nrow = 1)
+
+ggsave("3A&B.png", device = "png", path = "~/Desktop/Graficos", 
+       width =4500, height = 3700, units="px")
