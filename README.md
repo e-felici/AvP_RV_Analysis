@@ -25,7 +25,7 @@ This repository contains the scripts and workflows used in the identification an
 
 
 - **Bioinformatics Tools:**
-  - [BLAST+ v. 2.12](https://www.ncbi.nlm.nih.gov/books/NBK279690/) and [RPS-BLAST executables](https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html)
+  - [BLAST+ v. 2.12](https://www.ncbi.nlm.nih.gov/books/NBK279690/) and [RPS-BLAST executables v. 2.13.0](https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html)
   - [PSORTb v. 3.0.3](https://www.psort.org/psortb/index.html)
   - [SignalP v. 6.0](https://services.healthtech.dtu.dk/services/SignalP-6.0/)
   - [VaxiJen v. 3.0](https://www.ddg-pharmfac.net/vaxijen3/home/)
