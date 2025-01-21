@@ -1,0 +1,233 @@
+library(tidyverse)
+library(ggplot2)
+library(ggimage)
+library(patchwork)
+library(png)
+
+
+
+##### Grafico tipos ####
+
+candidatos <- read_tsv("~/Busqueda_antigenos/Antigenos_publicas22.tsv")
+
+candidatos$Protein<-gsub("_"," ",candidatos$Protein)
+
+temp_pi <- candidatos %>%
+  group_by(Protein) %>%
+  summarise(pI = mean(pI, na.rm = TRUE))
+
+temp_mw <- candidatos %>%
+  group_by(Protein) %>%
+  summarise(MW = mean(MW, na.rm = TRUE))
+
+temp_essen <- candidatos %>%
+  group_by(Protein) %>%
+  count(EssentialProtein) %>%
+  slice_max(n, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+temp_tipo <- candidatos %>%
+  group_by(Protein) %>%
+  count(Tipo) %>%
+  slice_max(n, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+temp_vf <- candidatos %>%
+  group_by(Protein) %>%
+  count(FactAdhe) %>%
+  slice_max(n, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+temp_a <- inner_join(temp_essen, temp_mw, by = "Protein")
+temp_b <- inner_join(temp_pi, temp_tipo, by = "Protein")
+
+temp_c <- inner_join(temp_vf, temp_a, by = "Protein")
+
+tabla <- inner_join(temp_c, temp_b, by = "Protein")
+
+rm(list = ls(pattern = '^temp_'))
+
+tabla <- select(tabla, !starts_with("n"))
+
+tabla$MW <- tabla$MW / 1000
+
+tabla$pI <- round(tabla$pI, digits = 2)
+tabla$MW <- round(tabla$MW, digits = 2)
+
+#write_tsv(tabla, "~/Busqueda_antigenos/Antigenos_paper/Ag_consensus.tsv")
+
+tabla$FactAdhe2 <- ifelse(tabla$FactAdhe == "Probable Virulence Factor",
+                          "~/Desktop/Graficos/vfactor.png",
+                          ifelse(tabla$FactAdhe == "Non Virulence Factor",
+                                 "~/Desktop/Graficos/nonvf.png",
+                                 "~/Desktop/Graficos/adhesin.png"))
+
+tabla$Tipo2 <- ifelse(tabla$Tipo == "Beta Barrel",
+                      "~/Desktop/Graficos/beta.png",
+                      ifelse(tabla$Tipo == "Secreted",
+                             "~/Desktop/Graficos/glob.png",
+                             "~/Desktop/Graficos/lipo.png"))
+
+tabla$essen2 <- ifelse(tabla$EssentialProtein == "Non Essential",
+                       "~/Desktop/Graficos/nonesen.png",
+                       "~/Desktop/Graficos/esencial.png")
+
+tabla <- tabla  %>%
+  mutate(category = rep(c(0, 1), length.out = n()))
+
+a <- ifelse(tabla$category == 0, "black", "grey35")
+
+beta <-readPNG("~/Desktop/Graficos/beta.png")
+sec <- readPNG("~/Desktop/Graficos/glob.png")
+lipo <- readPNG("~/Desktop/Graficos/lipo.png")
+
+p1 <- ggplot(tabla, aes(x = Protein)) + 
+  geom_point(aes(y = 50, fill = Tipo), size = 5) +
+  geom_image(aes(image = Tipo2), y = 50, size = 0.8) +  theme(
+    axis.title = element_text(family = "Times New Roman", size = 12, color = "black"), 
+    text = element_text(family = "Times New Roman", size = 12, color = "black"),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(),
+    legend.position="right", 
+    legend.justification = c(0, 1), 
+    legend.key.size =unit(1, 'cm'),
+    legend.text = element_text(family = "Times New Roman", size = 11, color = "black"),
+    legend.title = element_blank(),
+    panel.background = element_rect(fill = "white"), 
+    panel.grid.major.y = element_line(colour = "white"),
+    panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+  ) + 
+  labs(y = "", x = "") +
+  scale_x_discrete(labels = scales::label_wrap(25)) + 
+  annotation_raster(beta,  
+                    xmin = 12, 
+                    xmax = 13, 
+                    ymin = 49, 
+                    ymax = 50.5, 
+                    interpolate = T)
+
+  
+
+
+p2 <- ggplot(tabla, aes(x = Protein, y = 50)) + 
+  geom_point(aes(size = MW, fill = MW), alpha = 0.75, shape = 21) +
+  scale_fill_gradientn(colours = c("#4f2f4a","#25482f","olivedrab","#deb867","#9e2f28"),
+                       limits=c(0, 100), breaks=seq(0, 100, by=20),
+                       labels = scales::comma) +
+  guides(fill= guide_legend(), size=guide_legend()) + 
+  scale_size_continuous(limits=c(0, 100), breaks=seq(0, 100, by=20), 
+                        labels = scales::comma) +
+  theme(axis.text.x = element_blank(),
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        title = element_text(family = "Times New Roman"),
+        legend.title=element_blank(), 
+        legend.justification = c(0, 1), 
+        legend.position="right",
+        legend.byrow = T,
+        legend.location = "plot", 
+        legend.direction = "horizontal",
+        legend.key.size =unit(1, 'cm'),
+        legend.text = element_text(family = "Times New Roman", size = 11, color = "black"),
+        text = element_text(family = "Times New Roman", size = 12), 
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major.y = element_line(colour = "white"),
+        panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+  ) + 
+  labs(y = "", x = "") +
+  scale_x_discrete(labels = scales::label_wrap(25))
+
+
+p3 <- ggplot(tabla, aes(x = Protein, y = 50)) + 
+  geom_point(aes(size = pI, fill = pI), alpha = 0.75, shape = 21) +
+  scale_fill_gradientn(colours = c("#4f2f4a","#25482f","olivedrab","#deb867","#9e2f28"),
+                       limits=c(5, 10), breaks=seq(5, 10, by=1),
+                       labels = scales::comma) +
+  guides(fill= guide_legend(), size=guide_legend()) + 
+  scale_size_continuous(limits=c(5, 10), breaks=seq(5, 10, by=1), 
+                        labels = scales::comma) +
+  theme(axis.text.x = element_blank(),
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank(),
+        title = element_text(family = "Times New Roman"),
+        legend.title=element_blank(), 
+        legend.position="right",
+        legend.justification = c(0, 1), 
+        legend.byrow = T,
+        legend.location = "plot", 
+        legend.direction = "horizontal", 
+        legend.key.size =unit(1, 'cm'),
+        legend.text = element_text(family = "Times New Roman", size = 11, color = "black"),
+        axis.ticks = element_blank(),
+        text = element_text(family = "Times New Roman", size = 12), 
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major.y = element_line(colour = "white"),
+        panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+  ) + 
+  labs(y = "", x = "") +
+  scale_x_discrete(labels = scales::label_wrap(25))
+
+p4 <- ggplot(tabla, aes(x = Protein)) + 
+  geom_point(aes(y = 50, fill = FactAdhe), size = 5) +
+  geom_image(aes(image = FactAdhe2), y = 50, size = 0.65) +  theme(
+    axis.title = element_text(family = "Times New Roman", size = 12, color = "black"), 
+    text = element_text(family = "Times New Roman", size = 12, color = "black"),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(), 
+    legend.justification = c(0, 1), 
+    legend.position="right", 
+    legend.key.size =unit(1, 'cm'),
+    legend.text = element_text(family = "Times New Roman", size = 11, color = "black"),
+    legend.title = element_blank(),
+    panel.background = element_rect(fill = "white"), 
+    panel.grid.major.y = element_line(colour = "white"),
+    panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+      ) + 
+  labs(y = "", x = "") +
+  scale_x_discrete(labels = scales::label_wrap(25))
+
+p5 <- ggplot(tabla, aes(x = Protein)) + 
+  geom_point(aes(y = 50, fill = EssentialProtein), size = 5) +
+  geom_image(aes(image = essen2), y = 50, size = 0.6) +  theme(
+    axis.title = element_text(family = "Times New Roman", size = 12, color = "black"), 
+    text = element_text(family = "Times New Roman", size = 12, color = "black"),
+    axis.text.x = element_text(family = "Times New Roman", angle = 90, 
+                               size = 12, color = a, hjust = 1, vjust = 0.25),
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(),
+    legend.position="right",  
+    legend.justification = c(0, 1), 
+    legend.key.size =unit(1, 'cm'),
+    legend.text = element_text(family = "Times New Roman", size = 11, color = "black"),
+    legend.title = element_blank(),
+    panel.background = element_rect(fill = "white"), 
+    panel.grid.major.y = element_line(colour = "white"),
+    panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+      ) + 
+  labs(y = "", x = "") +
+  scale_x_discrete(labels = scales::label_wrap(25))
+
+
+layout <- c(
+  area(t = 1, l = 1, b = 2, r = 4),
+  area(t = 2, l = 1, b = 3, r = 4),
+  area(t = 3, l = 1, b = 4, r = 4),
+  area(t = 4, l = 1, b = 5, r = 4),
+  area(t = 5, l = 1, b = 6, r = 4)
+)
+
+
+p1 / p2 / p3 / p4 / p5  #+
+#plot_layout(design = layout)
+
+ggsave("7_2.png", device = "png", path = "~/Desktop/Graficos", 
+       width =2600, height = 2500, units="px")
+
+
+
