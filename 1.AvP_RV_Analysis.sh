@@ -340,70 +340,7 @@ deeptmhmm() {
 
      done
      
-     #Extracting info about the protein type
-     #Combining all predicted_topologies* files to get info about the protein type (Globular/Beta/Alpha with or without SP)
-     cat "$WorkDir"/"$subdir_name"/DeepTMHMM_results/predicted_topologies* > "$WorkDir"/"$subdir_name"/DeepTMHMM_results/DeepTMHMM_type_$subdir_name.txt
-   
-     #Extracting info about TMs and their characteristics
-     #Create a Temporal Directory
-     mkdir -p TEMP
-     #Copy TMRs* files
-     cp TMRs* TEMP/
-     popd
-     
-     #Move to Temporal directory
-     pushd "$WorkDir"/"$subdir_name"/DeepTMHMM_results/TEMP
-     # Loop through all files in the current directory
-	for file in *
-	do
-		# Append '//' to the end of each file
-    		printf '//
-' >> "$file"
-    		# Insert '//' at the beginning of each file
-    		sed -i '1 i\\/\/' "$file"
-    			
-    		#Replace older TMRs* files
-    		mv "$file" "$WorkDir"/"$subdir_name"/DeepTMHMM_results
-	done
-     popd
-     
-     #Move back to subdir
-     pushd "$WorkDir"/"$subdir_name"/DeepTMHMM_results
-     #Combining and cleaning all TMRs* files
-     cat TMRs* | grep -v "##gff-version 3" --binary-files=text > TEMP_DeepTMHMM_TM_$subdir_name.txt
-     # Separate TM characteristics
-     grep -v -e "Length" -e "Number of predicted TMRs" --binary-files=text TEMP_DeepTMHMM_TM_$subdir_name.txt > TEMP_DeepTMHMM_TMbreakdown_$subdir_name.txt
-     #Splitting the file based on //
-     csplit -z -s TEMP_DeepTMHMM_TMbreakdown_$subdir_name.txt /\/\// '{*}'
-     #Moving the split files to Temporal Directory
-     mv xx* TEMP
-     popd
-     
-     #Entering the folder with the split files
-     pushd TEMP
-     #Separating the pieces and counting them
-     for file in * ;
-     do
-		grep -o "signal" $file | wc -l > $file-7.signal
-		grep -o "periplasm" $file | wc -l > $file-3.peripl
-    		grep -o "inside" $file | wc -l > $file-2.inside
-    		grep -o "outside" $file | wc -l > $file-4.outside
-   		grep -o "Beta sheet" $file | wc -l > $file-5.beta
-    		grep -o "TMhelix" $file | wc -l > $file-6.alfa
-    		grep -v "#" $file | grep -v "//" | awk '{print $1;exit;}' > $file-1.name
-   		paste $file-* > $file-all
-     done
-     popd
-     
-     #Returning to the folder 
-     pushd "$WorkDir"/$subdir_name/DeepTMHMM_results
-     #Merging the pieces back together and cleaning up "proteins" that do not exist (derived from ending and beggining of file)
-     cat TEMP/*-all | grep -v --binary-files=text "  0  0  0  0  0  0" > DeepTMHMM_TMbreakdown_$subdir_name.txt
-     
-     # Clean up temporary files
-     rm TEMP*
-     rm -r TEMP biolib_results
-     
+        
      # Run R script for output processing
     Rscript "$RScripts"/DeepTMHMM.R "$WorkDir" "$subdir_name" || {
         log_message  "ERROR: R script failed for $subdir_name"
