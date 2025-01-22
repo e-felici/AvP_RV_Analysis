@@ -21,32 +21,105 @@ subdir <- args[2]
 
 cat("Filtering, cleaning, and sorting DeepTMHMM results\n")
 
-tryCatch({
-# Read results
-  #Protein type:
-  protType = as_tibble(read_delim(
+# Step 1: Combine all predicted_topologies* files into one
+type_files <- list.files(paste0(MAIN, "/", subdir,"/DeepTMHMM_results"), 
+                         pattern = "^predicted_topologies", full.names = TRUE)
+
+#Initialize variable i and vector conservation
+i = 1
+protType <- tibble(ID = character(), Type_of_Protein = character())
+
+#Entropy analysis for all files
+for (i in 1:length(type_files)) {
+  #read files
+  temp_protType = as_tibble(read_delim(
     paste0(MAIN, "/", subdir,"/DeepTMHMM_results/DeepTMHMM_type_", subdir, ".txt"),
     col_names = F, delim = "|"))
-  #Polish tibble
-  protType$X1 = str_replace_all(protType$X1, " ", "")
-  protType$X2 = str_replace_all(protType$X2, " ", "")
-  protType <- protType %>%
-    filter(str_detect(X1, ">"))
-  protType$X1 <- protType$X1 %>% str_replace(">", "")
   
-  #Breakdown of TM topology
-  TMbreakdown = as_tibble(read_tsv(
-    paste0(MAIN, "/", subdir, "/DeepTMHMM_results/DeepTMHMM_TMbreakdown_", subdir, ".txt"), 
-    col_names = F))
+  #Polish tibble
+  temp_protType$X1 = str_replace_all(temp_protType$X1, " ", "")
+  temp_protType$X2 = str_replace_all(temp_protType$X2, " ", "")
+  temp_protType <- temp_protType %>%
+    filter(str_detect(X1, ">"))
+  temp_protType$X1 <- temp_protType$X1 %>% str_replace(">", "")
+  colnames(temp_protType)[1:2] <- c("ID", "Type_of_Protein")
+  
+  #merge with others
+  protType <- full_join(protType, temp_protType, by = c("ID", "Type_of_Protein"))
+  
+}  
 
- 
+
+
+# Step 2: Copy and process TMRs* files
+TMR_files <- list.files(paste0(MAIN, "/", subdir,"/DeepTMHMM_results"), 
+                        pattern = "^TMRs", full.names = TRUE)
+
+#Initialize things
+i = 1
+TMbreakdown <- tibble(ID= character(),
+                      Inside_cell_or_cytosol= double(),
+                      Periplasm= double(), 
+                      Outside_cell= double(), 
+                      Beta_sheet_TM= double(), 
+                      Alpha_helix_TM= double(), 
+                      SignalPeptideNumber= double())
+required_cols <- c("ID","inside","periplasm","outside",
+                   "Beta sheet","TMhelix", "signal")
+
+#Entropy analysis for all files
+for (i in 1:length(TMR_files)) {
+  #read file
+  temp_TMbreakdown <- as_tibble(read.table(TMR_files[i],
+                                           sep = "\t", 
+                                           comment.char = "#", 
+                                           fill = TRUE, 
+                                           stringsAsFactors = FALSE))
+  #Polish
+  colnames(temp_TMbreakdown)[1:2]<- c("ID", "Location")
+  
+  temp_TMbreakdown <- temp_TMbreakdown %>% 
+    filter(ID != "//") %>%
+    select(ID, Location) %>%
+    filter(!if_all(everything(), ~ is.na(.) | . == ""))
+  
+  temp_TMbreakdown <- temp_TMbreakdown  %>%
+    group_by(ID, Location) %>%
+    summarise(Count = n(), .groups = "drop") %>%
+    as_tibble()
+  
+  temp_TMbreakdown <- temp_TMbreakdown  %>% pivot_wider(
+    names_from = Location,
+    values_from = Count 
+  ) %>%
+    mutate(across(everything(), ~ replace_na(.x, 0)))
+  
+  # Check for missing columns and add them if necessary
+  missing_cols <- setdiff(required_cols, colnames(temp_TMbreakdown))
+  
+  if (length(missing_cols) > 0) {
+    for (col in missing_cols) {
+      temp_TMbreakdown <- temp_TMbreakdown %>%
+        mutate(!!col := 0) 
+    }
+  }
+    
+    temp_TMbreakdown <- temp_TMbreakdown %>%
+      rename(
+        Inside_cell_or_cytosol = inside,
+        Periplasm = periplasm,
+        Outside_cell = outside, 
+        Beta_sheet_TM = `Beta sheet`,
+        Alpha_helix_TM = TMhelix, 
+        SignalPeptideNumber = signal
+      )
+  TMbreakdown <- full_join(TMbreakdown, temp_TMbreakdown, by = NULL)
+  
+}  
+  
   # Combine all files
-  AllResults <- left_join(protType, TMbreakdown, by = "X1")
-  #Polish results
-colnames(AllResults)[1:9] <- c("ID","Type_of_Protein","Inside_cell_or_cytosol",
-                              "Periplasm", "Outside_cell", "Beta_sheet_TM", "Alpha_helix_TM", 
-                              "SignalPeptideNumber")
-
+  AllResults <- left_join(protType, TMbreakdown, by = "ID")
+ 
   # Arrange the combined data frame by the first column
   AllResults <- arrange(AllResults, ID) %>%
     distinct(ID, .keep_all = TRUE)
