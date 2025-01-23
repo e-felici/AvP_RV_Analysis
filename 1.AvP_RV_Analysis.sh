@@ -253,9 +253,9 @@ vaxijen() {
     seqkit split -s 100 -f "$WorkDir"/"$subdir_name"/VaxiJen_results/$subdir_name-protein_filtered.faa
     
     # Process each split file
-    pushd "$WorkDir"/"$subdir_name"/VaxiJen_results/$subdir_name-protein_filtered.faa.split
-    for file in *; do
-        # Define maximum retries
+     for file in "$WorkDir/$subdir_name/VaxiJen_results/$subdir_name-protein_filtered.faa.split"/* ; 
+     do        
+        # Define things
         max_retries=3
         attempt=1
         success=false
@@ -291,7 +291,6 @@ vaxijen() {
         log_message  "ERROR: R script failed for $subdir_name"
         exit 1
     }    
-    popd
 }
 
 deeptmhmm() {
@@ -504,13 +503,13 @@ for strain_dir in "$WorkDir"/*; do
         	exit 1
     	}
     	cp "$WorkDir"/$strain_dir/Final_results-$strain_dir.tsv "$FinalRes"
-
-        popd || { log_message  "Error: Couldn't return to $WorkDir"; return 1; }
         
     else
         log_message  "Skipping $strain_dir (not a directory)"
     fi
 done
+popd || { log_message  "Error: Couldn't return to $WorkDir"; return 1; }
+
 
 #####Part 14: Creating al necessary folders in ConsDir 
 log_message  "-------- Creating al necessary folders --------"
