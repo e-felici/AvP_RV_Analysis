@@ -297,78 +297,72 @@ deeptmhmm() {
     local strain_dir=$1
     local subdir_name=$(basename "$strain_dir")
     
-    log_message  '-------- Transmembrane Topology Prediction and Classification with DeepTMHMM --------'
+    log_message '-------- Transmembrane Topology Prediction and Classification with DeepTMHMM --------'
     
-    cp "$WorkDir"/"$subdir_name"/protein.faa "$WorkDir"/"$subdir_name"/DeepTMHMM_results/
-    
-    pushd "$WorkDir"/"$subdir_name"/DeepTMHMM_results/
+    cp "$WorkDir/$subdir_name/protein.faa" "$WorkDir/$subdir_name/DeepTMHMM_results/"
     
     # Split the fasta file into smaller chunks
-    seqkit split -s 300 -f protein.faa || exit
+    seqkit split -s 300 -f "$WorkDir/$subdir_name/DeepTMHMM_results/protein.faa" || exit
     
     # Define batch size for processing
     batch_size=4
-    files_to_process=("$WorkDir"/"$subdir_name"/DeepTMHMM_results/protein.faa.split/*)
+    files_to_process=("$WorkDir/$subdir_name/DeepTMHMM_results/protein.faa.split"/*)
     
     # Initialize file number
     file_number=1
     
     # Process files in batches
     for ((i = 0; i < ${#files_to_process[@]}; i += batch_size)); do
-    	batch=("${files_to_process[@]:i:batch_size}")
-    	log_message  "Processing batch $((i / batch_size + 1)) out of $(((${#files_to_process[@]} + batch_size - 1) / batch_size))"
-	
-	# Define maximum retries
-	max_retries=3
-	
-    	# Process each file in the batch
-    	for file_to_process in "${batch[@]}"; do
-        	
-        	attempt=1
-        	success=false
-        	
-        	while [[ $attempt -le $max_retries ]]; do
-        		log_message "Attempt $attempt: Running DeepTMHMM on $file_to_process"
-        		biolib run DTU/DeepTMHMM --fasta "$file_to_process"
+        batch=("${files_to_process[@]:i:batch_size}")
+        log_message "Processing batch $((i / batch_size + 1)) out of $(((${#files_to_process[@]} + batch_size - 1) / batch_size))"
+    
+        # Define maximum retries
+        max_retries=3
+    
+        # Process each file in the batch
+        for file_to_process in "${batch[@]}"; do
+            
+            attempt=1
+            success=false
+            
+            while [[ $attempt -le $max_retries ]]; do
+                log_message "Attempt $attempt: Running DeepTMHMM on $file_to_process"
+                biolib run DTU/DeepTMHMM --fasta "$file_to_process"
 
-                        if [[ $? -eq 0 ]]; then
-            			log_message "Successfully processed $file_to_process on attempt $attempt"
-            			success=true
-            			break
-        		else
-            			log_message "ERROR: DeepTMHMM failed on $file_to_process (attempt $attempt)"
-            			((attempt++))
-        		fi
-   		done
+                if [[ $? -eq 0 ]]; then
+                    log_message "Successfully processed $file_to_process on attempt $attempt"
+                    success=true
+                    break
+                else
+                    log_message "ERROR: DeepTMHMM failed on $file_to_process (attempt $attempt)"
+                    ((attempt++))
+                fi
+            done
 
-    		if [[ $success == false ]]; then
-        		log_message "ERROR: DeepTMHMM failed after $max_retries attempts for $file_to_process"
-        		# Fail!!
-        		exit 1 
-    		fi
+            if [[ $success == false ]]; then
+                log_message "ERROR: DeepTMHMM failed after $max_retries attempts for $file_to_process"
+                exit 1 
+            fi
 
-        	# Move results to the corresponding folder
-        	mv biolib_results/predicted_topologies* "$WorkDir"/"$subdir_name"/DeepTMHMM_results/predicted_topologies-$file_number
-        	mv biolib_results/TMRs.gff3* "$WorkDir"/"$subdir_name"/DeepTMHMM_results/TMRs.gff3-$file_number
-        	
-        	# Increment file number and remove processed file
-        	((file_number++))
-        	rm -f "$file_to_process"
+            # Move results to the corresponding folder
+            mv "$WorkDir/$subdir_name/DeepTMHMM_results/biolib_results/predicted_topologies"* "$WorkDir/$subdir_name/DeepTMHMM_results/predicted_topologies-$file_number"
+            mv "$WorkDir/$subdir_name/DeepTMHMM_results/biolib_results/TMRs.gff3"* "$WorkDir/$subdir_name/DeepTMHMM_results/TMRs.gff3-$file_number"
+            
+            # Increment file number and remove processed file
+            ((file_number++))
+            rm -f "$file_to_process"
         done
-        #Pausing script for 22 hours after processing another batch of files. This is necessary due to the sequence submission limits of DeepTMHMM
+        # Pausing script for 22 hours after processing another batch of files. This is necessary due to the sequence submission limits of DeepTMHMM
         now="$(date)"
-        log_message  "Pause script for 22 hours, starting from: $now"
+        log_message "Pause script for 22 hours, starting from: $now"
         sleep 22h
-
-     done
-     
-        
-     # Run R script for output processing
-    Rscript "$RScripts"/DeepTMHMM.R "$WorkDir" "$subdir_name" || {
-        log_message  "ERROR: R script failed for $subdir_name"
+    done
+    
+    # Run R script for output processing
+    Rscript "$RScripts/DeepTMHMM.R" "$WorkDir" "$subdir_name" || {
+        log_message "ERROR: R script failed for $subdir_name"
         exit 1
-    } 
-    popd   
+    }
 }
 
 COG() {
