@@ -22,12 +22,12 @@ check_dependencies() {
             exit 1
         fi
     done
-    echo "All dependencies are installed."
+    log_message "All dependencies are installed."
 }
 
 #Print a log message with a timestamp
 log_message() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+printf "[%s] %s\n" "$(date +'%Y-%m-%d %H:%M:%S')" "$1"
 }
 
 #Prepare everything for analysis of a single strain
@@ -255,9 +255,32 @@ vaxijen() {
     # Process each split file
     pushd "$WorkDir"/"$subdir_name"/VaxiJen_results/$subdir_name-protein_filtered.faa.split
     for file in *; do
-    	log_message  "Processing $file"
-    	# Run VaxiJen.py script
-    	$VaxiJen "$Chromedriver" "$WorkDir"/"$subdir_name"/VaxiJen_results/$subdir_name-protein_filtered.faa.split/ "$file"
+        # Define maximum retries
+        max_retries=3
+        attempt=1
+        success=false
+    
+        while [[ $attempt -le $max_retries ]]; do
+            # Run VaxiJen.py script
+            python "$VaxiJen" "$Chromedriver" "$WorkDir/$subdir_name/VaxiJen_results/$subdir_name-protein_filtered.faa.split/" "$file"
+        
+            # Check if the output file was created
+            output_file="$WorkDir/$subdir_name/VaxiJen_results/$subdir_name-protein_filtered.faa.split/${file}-processed"
+            if [[ -f "$output_file" ]]; then
+                log_message "Successfully processed $file on attempt $attempt"
+                success=true
+                break
+            else
+                log_message "ERROR: Processing failed for $file on attempt $attempt. Retrying..."
+                sleep 5
+                ((attempt++))
+            fi
+        done
+    
+        if [[ $success == false ]]; then
+            log_message "ERROR!! Processing failed for $file after $max_retries attempts. Exiting!"
+            exit 1
+        fi
     done
     
     #Merge all files

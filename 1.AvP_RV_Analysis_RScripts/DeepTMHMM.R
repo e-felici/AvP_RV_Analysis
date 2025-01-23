@@ -22,19 +22,19 @@ subdir <- args[2]
 cat("Filtering, cleaning, and sorting DeepTMHMM results\n")
 
 # Step 1: Combine all predicted_topologies* files into one
-type_files <- list.files(paste0(MAIN, "/", subdir,"/DeepTMHMM_results"), 
+type_files <- list.files(paste0(MAIN, "/", subdir, "/DeepTMHMM_results"),
                          pattern = "^predicted_topologies", full.names = TRUE)
 
 #Initialize variable i and vector conservation
-i = 1
+i <- 1
 protType <- tibble(ID = character(), Type_of_Protein = character())
 
 #Entropy analysis for all files
-for (i in 1:length(type_files)) {
+for (i in 1:seq_along(type_files)) {
   #read files
-  temp_protType = as_tibble(read_delim(
-    paste0(MAIN, "/", subdir,"/DeepTMHMM_results/DeepTMHMM_type_", subdir, ".txt"),
-    col_names = F, delim = "|"))
+  temp_protType <- as_tibble(read_delim(
+    paste0(MAIN, "/", subdir, "/DeepTMHMM_results/DeepTMHMM_type_", subdir, ".txt"),
+    col_names = FALSE, delim = "|"))
   
   #Polish tibble
   temp_protType$X1 = str_replace_all(temp_protType$X1, " ", "")
@@ -68,7 +68,7 @@ required_cols <- c("ID","inside","periplasm","outside",
                    "Beta sheet","TMhelix", "signal")
 
 #Entropy analysis for all files
-for (i in 1:length(TMR_files)) {
+for (i in 1:seq_along(TMR_files)) {
   #read file
   temp_TMbreakdown <- as_tibble(read.table(TMR_files[i],
                                            sep = "\t", 
@@ -130,9 +130,9 @@ for (i in 1:length(TMR_files)) {
   
   rm(list = ls())
   
-  }, 
+   
 # Catch any errors that may occur during execution
 error = function(e) {
   # Print a warning message if an error occurs
   warning(paste0("Error arranging DeppTMHMM results: ", conditionMessage(e)))
-})
+}

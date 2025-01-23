@@ -46,7 +46,7 @@ time.sleep(30)
 
 print('Find')
 Button = driver.find_element(By.NAME, 'uploaded_file')
-Button.send_keys(output_dir + output_file)
+Button.send_keys(output_dir + output_file )
 
 print('Submit')
 driver.find_element(By.NAME, 'submit').click()
@@ -58,7 +58,7 @@ webdriver.ActionChains(driver).key_down(Keys.CONTROL).send_keys("c").perform()
 
 print('Paste')
 content = pyperclip.paste()
-outFile = open(output_dir + output_file, 'w')
+outFile = open(output_dir + output_file + "-processed", 'w')
 outFile.write(content)
 outFile.close()
 time.sleep(30)
