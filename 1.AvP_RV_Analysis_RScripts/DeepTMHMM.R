@@ -25,14 +25,12 @@ cat("Filtering, cleaning, and sorting DeepTMHMM results\n")
 type_files <- list.files(paste0(MAIN, "/", subdir, "/DeepTMHMM_results"),
                          pattern = "^predicted_topologies", full.names = TRUE)
 
-#Initialize variable i and vector conservation
-i <- 1
+#Initialize things
 protType <- tibble(ID = character(), Type_of_Protein = character())
 
-#Entropy analysis for all files
-for (i in 1:seq_along(type_files)) {
+for (file in type_files) {
   #read files
-  temp_protType <- as_tibble(read_delim(type_files[i],
+  temp_protType <- as_tibble(read_delim(file,
     col_names = FALSE, delim = "|"))
   
   #Polish tibble
@@ -46,7 +44,6 @@ for (i in 1:seq_along(type_files)) {
   #merge with others
   protType <- full_join(protType, temp_protType, by = c("ID", "Type_of_Protein"))
   
-  i <- i + 1
 }  
 
 
@@ -56,7 +53,6 @@ TMR_files <- list.files(paste0(MAIN, "/", subdir,"/DeepTMHMM_results"),
                         pattern = "^TMRs", full.names = TRUE)
 
 #Initialize things
-i = 1
 TMbreakdown <- tibble(ID= character(),
                       Inside_cell_or_cytosol= double(),
                       Periplasm= double(), 
@@ -65,13 +61,12 @@ TMbreakdown <- tibble(ID= character(),
                       Alpha_helix_TM= double(), 
                       SignalPeptideNumber= double())
 required_cols <- c("ID","inside","periplasm","outside",
-                   "Beta sheet","TMhelix", "signal")
+                   "Beta","TMhelix", "signal")
 
-#Entropy analysis for all files
-for (i in 1:seq_along(TMR_files)) {
+for (File in TMR_files) {
   #read file
-  temp_TMbreakdown <- as_tibble(read.table(TMR_files[i],
-                                           sep = "\t", 
+  temp_TMbreakdown <- as_tibble(read.table(File,
+                                           sep = "", 
                                            comment.char = "#", 
                                            fill = TRUE, 
                                            stringsAsFactors = FALSE))
@@ -81,7 +76,8 @@ for (i in 1:seq_along(TMR_files)) {
   temp_TMbreakdown <- temp_TMbreakdown %>% 
     filter(ID != "//") %>%
     select(ID, Location) %>%
-    filter(!if_all(everything(), ~ is.na(.) | . == ""))
+    filter(!if_all(everything(), ~ is.na(.) | . == "")) %>%
+    filter(str_detect(ID, "WP_|HBL79"))
   
   temp_TMbreakdown <- temp_TMbreakdown  %>%
     group_by(ID, Location) %>%
@@ -91,7 +87,7 @@ for (i in 1:seq_along(TMR_files)) {
   temp_TMbreakdown <- temp_TMbreakdown  %>% pivot_wider(
     names_from = Location,
     values_from = Count 
-  ) %>%
+    ) %>%
     mutate(across(everything(), ~ replace_na(.x, 0)))
   
   # Check for missing columns and add them if necessary
@@ -109,13 +105,12 @@ for (i in 1:seq_along(TMR_files)) {
         Inside_cell_or_cytosol = inside,
         Periplasm = periplasm,
         Outside_cell = outside, 
-        Beta_sheet_TM = `Beta sheet`,
+        Beta_sheet_TM = Beta,
         Alpha_helix_TM = TMhelix, 
         SignalPeptideNumber = signal
       )
   TMbreakdown <- full_join(TMbreakdown, temp_TMbreakdown, by = NULL)
   
-  i <- i + 1
 }  
   
   # Combine all files
