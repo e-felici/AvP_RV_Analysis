@@ -372,7 +372,7 @@ COG() {
     log_message  '--------COG Analysis with RPS-BLAST--------'
 
     #Running rps-blast
-    $rpsblast -evalue 100 \
+    rpsblast -evalue 100 \
            -query "$WorkDir"/"$subdir_name"/protein.faa \
            -db "$COG"/Cog_LE/Cog \
            -out "$WorkDir"/"$subdir_name"/COG_results/"$subdir_name"-vs_COG.out \
@@ -421,11 +421,10 @@ while IFS= read -r line; do
         9) VaxiJen="$line" ;;
         10) Chromedriver="$line" ;;
         11) COG="$line" ;;
-	    12) ;;
+	12) ;;
         13) ;;
         14) ;;
-	    15) ;;
-        16) rpsblast="$line" ;;
+	15) ;;
         *) log_message  "Warning: File contains too many lines. Ignoring extra lines." ;;
     esac
 done < "$file"
@@ -434,7 +433,7 @@ done < "$file"
 if [ -z "$WorkDir" ] || [ -z "$MultiSeq" ] || [ -z "$ConsDir" ] || 
     [ -z "$FinalRes" ] || [ -z "$DBDIR" ] || [ -z "$RScripts" ] || 
     [ -z "$Psortb" ] || [ -z "$SPAAN" ] || [ -z "$VaxiJen" ] || 
-    [ -z "$Chromedriver" ] || [ -z "$COG" ] || [ -z "$rpsblast" ]; then
+    [ -z "$Chromedriver" ] || [ -z "$COG" ] ; then
     log_message  "Error: The file must contain all the arguments!"
     exit 1
 fi
@@ -452,7 +451,6 @@ log_message  "Path to SPAAN folder with all the files to run standalone SPAAN: $
 log_message  "Path to VaxiJen.py script: $VaxiJen"
 log_message  "Path to Chromedriver binary: $Chromedriver"
 log_message  "Path to COG folder with all COG and CDD resources: $COG"
-log_message  "Path to rpsblast executable: $rpsblast"
 
 pushd "$WorkDir"
 for strain_dir in "$WorkDir"/*; do
