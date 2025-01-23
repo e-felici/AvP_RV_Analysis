@@ -69,10 +69,10 @@ for (File in TMR_files) {
                                            sep = "", 
                                            comment.char = "#", 
                                            fill = TRUE, 
-                                           stringsAsFactors = FALSE))
+                                           stringsAsFactors = FALSE,
+                                           row.names=NULL,
+                                           col.names=c("ID", "Location", "X","Y","Z")))
   #Polish
-  colnames(temp_TMbreakdown)[1:2]<- c("ID", "Location")
-  
   temp_TMbreakdown <- temp_TMbreakdown %>% 
     filter(ID != "//") %>%
     select(ID, Location) %>%
