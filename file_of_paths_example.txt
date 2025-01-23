@@ -13,3 +13,4 @@ path/to/AgProtect_folder
 path/to/2.AgProtect_RV_Analysis_RScripts
 path/to/GramAdvanced_folder
 path/to/3.Final_RV_Analysis_RScripts
+path/to/rpsblastp_executable

@@ -32,8 +32,7 @@ protType <- tibble(ID = character(), Type_of_Protein = character())
 #Entropy analysis for all files
 for (i in 1:seq_along(type_files)) {
   #read files
-  temp_protType <- as_tibble(read_delim(
-    paste0(MAIN, "/", subdir, "/DeepTMHMM_results/DeepTMHMM_type_", subdir, ".txt"),
+  temp_protType <- as_tibble(read_delim(type_files[i],
     col_names = FALSE, delim = "|"))
   
   #Polish tibble
@@ -47,6 +46,7 @@ for (i in 1:seq_along(type_files)) {
   #merge with others
   protType <- full_join(protType, temp_protType, by = c("ID", "Type_of_Protein"))
   
+  i <- i + 1
 }  
 
 
@@ -115,6 +115,7 @@ for (i in 1:seq_along(TMR_files)) {
       )
   TMbreakdown <- full_join(TMbreakdown, temp_TMbreakdown, by = NULL)
   
+  i <- i + 1
 }  
   
   # Combine all files

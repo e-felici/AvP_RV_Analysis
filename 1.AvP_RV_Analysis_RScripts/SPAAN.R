@@ -34,7 +34,9 @@ tryCatch({
  
    #Polish results
   raw <- select(raw, "Protein name (Annotation)", "Pad-value")
-  raw$`Protein name (Annotation)` <- gsub("\\.1.*", ".1", raw$`Protein name (Annotation)`)
+  raw$`Protein name (Annotation)` <- gsub("\\.1.*|\\s.*", 
+      "", 
+      raw$`Protein name (Annotation)`)  
   colnames(raw)[1] = "ID"
   colnames(raw)[2] <- "AdhesinProbability"
   raw$ID <- raw$ID %>% str_replace("\\.1", "")

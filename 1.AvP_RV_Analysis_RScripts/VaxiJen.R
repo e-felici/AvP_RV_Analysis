@@ -29,7 +29,9 @@ tryCatch({
   #Rare aminoacids
   RareAA <- read_tsv(paste0(MAIN, "/", subdir, "/VaxiJen_results/IDs_RareAminoAcids"), col_names = "ID")
   RareAA$AntigenicityResult <- "-"
-  
+  RareAA %>% RareAA
+  filter(!str_detect(ID, "seqID"))
+
   # Extracting IDs
 ids <- vaxijen_data %>%
   filter(str_detect(ID, "WP_|HBL79")) %>%
