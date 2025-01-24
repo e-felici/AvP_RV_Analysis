@@ -34,7 +34,7 @@ tryCatch({
     reduce(full_join, by = "ID")  
 
 # Write the final results to a TSV file
-write_tsv(ALL, paste0(MAIN, "/", subdir, "/Final_Results-", subdir, ".tsv"))
+write_tsv(ALL, paste0(MAIN, "/", subdir, "/Final_results-", subdir, ".tsv"))
 rm(list = ls())
 
 }, 
