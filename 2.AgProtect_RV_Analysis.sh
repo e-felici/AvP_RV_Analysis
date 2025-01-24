@@ -13,21 +13,21 @@ set -euo pipefail
 
 
 ####Functions
+#Print a log message with a timestamp
+log_message() {
+    printf "[%s] %s\n" "$(date +'%Y-%m-%d %H:%M:%S')" "$1"
+}
+
 # Check if required dependencies are installed
 check_dependencies() {
-    local dependencies=("blastp" "Rscript" "seqkit" "signalp6" "pepstats" "biolib" "rpsblastp" "python" "R")
+    local dependencies=("blastp" "Rscript" "seqkit" "signalp6" "pepstats" "biolib" "rpsblast" "python" "R")
     for dep in "${dependencies[@]}"; do
         if ! command -v "$dep" &>/dev/null; then
             echo "Error: $dep is not installed or not in PATH." >&2
             exit 1
         fi
     done
-    echo "All dependencies are installed."
-}
-
-#Print a log message with a timestamp
-log_message() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+    log_message "All dependencies are installed."
 }
 
 #Prepare everything for analysis of a single strain
@@ -73,11 +73,8 @@ prepare_analysis() {
 blast_against_databases() {
     echo '--------BLAST against different databases--------'
     
-    # Navigate to the directory containing the databases
-    pushd "$DBDIR" || { echo "Error: Could not navigate to $DBDIR"; return 1; }
-
     # Loop through each folder in the database directory
-    for DBfolder in */; do
+    for DBfolder in "$DBDIR"/*; do
         # Remove trailing slash
         DBfolder=${DBfolder%/}
 
@@ -91,7 +88,6 @@ blast_against_databases() {
             -outfmt 6
     done
     
-    popd
 }
 
 characterization() {
@@ -102,7 +98,7 @@ characterization() {
     	-outfile "$AgProtect"/EMBOSS_results/EMBOSS-AgProtect 
 
     # Run R script for output processing
-    Rscript "$RScripts"/EMBOSS.R "$AgProtect" || {
+    Rscript "$RScripts"/EMBOSS_AgProtect.R "$AgProtect" || {
         log_message  "ERROR: R script failed for AgProtect"
         exit 1
     }    
@@ -131,7 +127,7 @@ localization() {
     mv "$GramAdv"/GramNegativeWithoutOM "$AgProtect"/PSORTb_results/GramNegativeWithoutOM
     
     # Run R script for output processing
-    Rscript "$RScripts"/PSORTb.R "$AgProtect"  || {
+    Rscript "$RScripts"/PSORTb_AgProtect.R "$AgProtect"  || {
         log_message  "ERROR: R script failed for AgProtect"
         exit 1
     }    
@@ -172,19 +168,13 @@ adhesin_identification() {
     mv query.out SPAAN-unpolished.txt 
     rm query.dat
     cp SPAAN-unpolished.txt "$AgProtect"/SPAAN_results/
-
+    popd
+    
     # Run R script
-    if [[ -f "$RScripts/SPAAN_AgProtect.R" ]]; then
         Rscript "$RScripts/SPAAN_AgProtect.R" "$AgProtect" || {
         log_message  "ERROR: R script failed for AgProtect"
         exit 1
     }    
-    else
-        log_message  "Error: R script $RScripts/SPAAN_AgProtect.R not found."
-        return 1
-    fi
-    
-    popd
 }
 
 vaxijen() {
@@ -202,11 +192,34 @@ vaxijen() {
     seqkit split -s 100 -f "$AgProtect"/VaxiJen_results/AgProtect-protein_filtered.faa
     
     # Process each split file
-    pushd "$AgProtect"/VaxiJen_results/AgProtect-protein_filtered.faa.split
-    for file in *; do
-    	log_message  "Processing $file"
-    	# Run VaxiJen.py script
-    	$VaxiJen "$Chromedriver" "$AgProtect"/VaxiJen_results/AgProtect-protein_filtered.faa.split/ "$file"
+    for file in "$AgProtect"/VaxiJen_results/AgProtect-protein_filtered.faa.split/* ; 
+    do
+    # Define things
+        max_retries=3
+        attempt=1
+        success=false
+
+        while [[ $attempt -le $max_retries ]]; do
+            # Run VaxiJen.py script
+            python "$VaxiJen" "$Chromedriver" "$AgProtect"/VaxiJen_results/AgProtect-protein_filtered.faa.split/" "$file"
+        
+            # Check if the output file was created
+            output_file="$AgProtect"/VaxiJen_results/AgProtect-protein_filtered.faa.split/${file}-processed"
+            if [[ -f "$output_file" ]]; then
+                log_message "Successfully processed $file on attempt $attempt"
+                success=true
+                break
+            else
+                log_message "ERROR: Processing failed for $file on attempt $attempt. Retrying..."
+                sleep 5
+                ((attempt++))
+            fi
+        done
+    
+        if [[ $success == false ]]; then
+            log_message "ERROR!! Processing failed for $file after $max_retries attempts. Exiting!"
+            exit 1
+        fi
     done
     
     #Merge all files
@@ -217,18 +230,15 @@ vaxijen() {
         log_message  "ERROR: R script failed for AgProtect"
         exit 1
     }    
-    popd
 }
 
 deeptmhmm() {
     log_message  '-------- Transmembrane Topology Prediction and Classification with DeepTMHMM --------'
     
     cp "$AgProtect"/protein.faa "$AgProtect"/DeepTMHMM_results/
-    
-    pushd "$AgProtect"/DeepTMHMM_results/
-    
+        
     # Split the fasta file into smaller chunks
-    seqkit split -s 300 -f protein.faa || exit
+    seqkit split -s 300 -f "$AgProtect"/DeepTMHMM_results/protein.faa || exit
     
     # Define batch size for processing
     batch_size=4
@@ -267,13 +277,12 @@ deeptmhmm() {
 
     		if [[ $success == false ]]; then
         		log_message "ERROR: DeepTMHMM failed after $max_retries attempts for $file_to_process"
-        		# Fail!!
         		exit 1 
     		fi
 
         	# Move results to the corresponding folder
-        	mv biolib_results/predicted_topologies* "$AgProtect"/DeepTMHMM_results/predicted_topologies-$file_number
-        	mv biolib_results/TMRs.gff3* "$AgProtect"/DeepTMHMM_results/TMRs.gff3-$file_number
+        	mv "$AgProtect"/DeepTMHMM_results/biolib_results/predicted_topologies* "$AgProtect"/DeepTMHMM_results/predicted_topologies-$file_number
+        	mv "$AgProtect"/DeepTMHMM_results/biolib_results/TMRs.gff3* "$AgProtect"/DeepTMHMM_results/TMRs.gff3-$file_number
         	
         	# Increment file number and remove processed file
         	((file_number++))
@@ -281,95 +290,31 @@ deeptmhmm() {
         done
         #Pausing script for 22 hours after processing another batch of files. This is necessary due to the sequence submission limits of DeepTMHMM
         now="$(date)"
-        log_message  "Pause script for 22 hours, starting from: $now"
+        log_message "Pause script for 22 hours, starting from: $now"
         sleep 22h
 
      done
      
-     #Extracting info about the protein type
-     #Combining all predicted_topologies* files to get info about the protein type (Globular/Beta/Alpha with or without SP)
-     cat "$AgProtect"/DeepTMHMM_results/predicted_topologies* > "$AgProtect"/DeepTMHMM_results/DeepTMHMM_type_AgProtect.txt
-   
-     #Extracting info about TMs and their characteristics
-     #Create a Temporal Directory
-     mkdir -p TEMP
-     #Copy TMRs* files
-     cp TMRs* TEMP/
-     popd
-     
-     #Move to Temporal directory
-     pushd "$AgProtect"/DeepTMHMM_results/TEMP
-     # Loop through all files in the current directory
-	for file in *
-	do
-		# Append '//' to the end of each file
-    		printf '//
-' >> "$file"
-    		# Insert '//' at the beginning of each file
-    		sed -i '1 i\\/\/' "$file"
-    			
-    		#Replace older TMRs* files
-    		mv "$file" "$AgProtect"/DeepTMHMM_results
-	done
-     popd
-     
-     #Move back to subdir
-     pushd "$AgProtect"/DeepTMHMM_results
-     #Combining and cleaning all TMRs* files
-     cat TMRs* | grep -v "##gff-version 3" --binary-files=text > TEMP_DeepTMHMM_TM_AgProtect.txt
-     # Separate TM characteristics
-     grep -v -e "Length" -e "Number of predicted TMRs" --binary-files=text TEMP_DeepTMHMM_TM_AgProtect.txt > TEMP_DeepTMHMM_TMbreakdown_AgProtect.txt
-     #Splitting the file based on //
-     csplit -z -s TEMP_DeepTMHMM_TMbreakdown_AgProtect.txt /\/\// '{*}'
-     #Moving the split files to Temporal Directory
-     mv xx* TEMP
-     popd
-     
-     #Entering the folder with the split files
-     pushd TEMP
-     #Separating the pieces and counting them
-     for file in * ;
-     do
-		grep -o "signal" $file | wc -l > $file-7.signal
-		grep -o "periplasm" $file | wc -l > $file-3.peripl
-    		grep -o "inside" $file | wc -l > $file-2.inside
-    		grep -o "outside" $file | wc -l > $file-4.outside
-   		grep -o "Beta sheet" $file | wc -l > $file-5.beta
-    		grep -o "TMhelix" $file | wc -l > $file-6.alfa
-    		grep -v "#" $file | grep -v "//" | awk '{print $1;exit;}' > $file-1.name
-   		paste $file-* > $file-all
-     done
-     popd
-     
-     #Returning to the folder 
-     pushd "$AgProtect"/DeepTMHMM_results
-     #Merging the pieces back together and cleaning up "proteins" that do not exist (derived from ending and beggining of file)
-     cat TEMP/*-all | grep -v --binary-files=text "  0  0  0  0  0  0" > DeepTMHMM_TMbreakdown_AgProtect.txt
-     
-     # Clean up temporary files
-     rm TEMP*
-     rm -r TEMP biolib_results
-     
+          
      # Run R script for output processing
-     Rscript "$RScripts"/DeepTMHMM.R "$AgProtect" || {
+     Rscript "$RScripts"/DeepTMHMM_AgProtect.R "$AgProtect" || {
         log_message  "ERROR: R script failed for AgProtect"
         exit 1
-     } 
-     popd   
+     }    
 }
 
 COG() {
     log_message  '--------COG Analysis with RPS-BLAST--------'
 
     #Running rps-blast
-    rpsblastp -evalue 100 \
+    rpsblast -evalue 100 \
            -query "$AgProtect"/protein.faa \
            -db "$COG"/Cog_LE/Cog \
            -out "$AgProtect"/COG_results/AgProtect-vs_COG.out \
            -outfmt 6  
 
     # Run R script for output processing
-    Rscript "$RScripts"/COG.R "$AgProtect" "$COG" || {
+    Rscript "$RScripts"/COG_AgProtect.R "$AgProtect" "$COG" || {
         log_message  "ERROR: R script failed for AgProtect"
         exit 1
     } 
@@ -459,10 +404,10 @@ if [[ ! -f HostList.tsv ]]; then
 fi
 
 #####Part 2: Pre-process each strain folder
-prepare_analysis "$AgProtect" || { log_message  "Error in pre-processing proteins from AgProtect"; return 1; }
+prepare_analysis || { log_message  "Error in pre-processing proteins from AgProtect"; return 1; }
 
 #####Part 3: Blastp against several databases
-blast_against_databases "$AgProtect" || { log_message  "Error in blastp analysis for proteins in AgProtect"; return 1; }
+blast_against_databases || { log_message  "Error in blastp analysis for proteins in AgProtect"; return 1; }
 #Moving some files to their corresponding place
 mv "$AgProtect"/Homology_Analysis_results/DEG_bacteria.out "$AgProtect"/Resultados_DEG/AgProtect-vs_DEG.out
 mv "$AgProtect"/Homology_Analysis_results/VFDB_full.out "$AgProtect"/Resultados_DEG/AgProtect-vs_VFDB.out
@@ -504,5 +449,5 @@ Rscript "$RScripts"/Final_polishing_AgProtect.R "$AgProtect" || {
     	}
 cp "$AgProtect"/Final_results-AgProtect.tsv "$FinalRes"/
 
-        popd 
+popd 
 echo "-------- End of most of the analysis for strain AgProtect --------"
