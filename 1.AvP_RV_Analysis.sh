@@ -421,10 +421,10 @@ while IFS= read -r line; do
         9) VaxiJen="$line" ;;
         10) Chromedriver="$line" ;;
         11) COG="$line" ;;
-	12) ;;
+	    12) ;;
         13) ;;
         14) ;;
-	15) ;;
+	    15) ;;
         *) log_message  "Warning: File contains too many lines. Ignoring extra lines." ;;
     esac
 done < "$file"
@@ -495,11 +495,12 @@ for strain_dir in "$WorkDir"/*; do
         COG "$strain_dir" || { log_message  "COG Analysis with RPS-BLAST failed for $strain_dir"; return 1; }
         
         #####Part 13: Run R script for final output processing
-        Rscript "$RScripts"/Final_polishing.R "$WorkDir" "$strain_dir" || {
-        	log_message  "ERROR: R script failed for $strain_dir"
+        subdir_name=$(basename "$strain_dir")
+        Rscript "$RScripts"/Final_polishing.R "$WorkDir" "$subdir_name" || {
+        	log_message  "ERROR: R script failed for $subdir_name"
         	exit 1
     	}
-    	cp "$WorkDir"/$strain_dir/Final_results-$strain_dir.tsv "$FinalRes"
+    	cp "$WorkDir"/$subdir_name/Final_results-$subdir_name.tsv "$FinalRes"
         
     else
         log_message  "Skipping $strain_dir (not a directory)"
