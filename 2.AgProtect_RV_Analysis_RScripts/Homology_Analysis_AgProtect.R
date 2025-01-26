@@ -33,11 +33,7 @@ tryCatch({
   Hom_files = list.files(paste0(AgProtect,"/Homology_Analysis_results/"),
                           full.names = F)
   #List of antigens and hosts
-  HostList <- read_tsv(paste0(AgProtect,"/HostList.tsv"))
-  HostList  <- HostList %>% mutate(
-    Host = str_replace_all(Host, " ", ""))
-  
- 
+  HostList <- read_tsv(paste0(AgProtect,"/HostList.tsv"), col_names = TRUE)
   
   ######First, we process raw results for all species
   #Initialize variable i and vector conservation
