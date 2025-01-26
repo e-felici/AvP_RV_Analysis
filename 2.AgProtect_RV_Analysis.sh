@@ -32,32 +32,29 @@ check_dependencies() {
 
 #Prepare everything for analysis of a single strain
 prepare_analysis() {
-    local strain_dir=$1
-    local subdir_name=$(basename "$strain_dir")
-
-    log_message  "~~~~~~~~~~ Preparation for Analysis of $subdir_name ~~~~~~~~~~"
+    log_message  "~~~~~~~~~~ Preparation for Analysis of AgProtect ~~~~~~~~~~"
 
     # Create subfolders in the strain directory
-    log_message  "Creating subfolders for $subdir_name..."
-    mkdir -p "$strain_dir/Homology_Analysis_results" \
-             "$strain_dir/DEG_results" \
-             "$strain_dir/VFDB_full_results" \
-             "$strain_dir/Final_results" \
-             "$strain_dir/PSORTb_results" \
-             "$strain_dir/VaxiJen_results" \
-             "$strain_dir/EMBOSS_results" \
-             "$strain_dir/SignalP_results" \
-             "$strain_dir/SPAAN_results" \
-             "$strain_dir/DeepTMHMM_results" \
-             "$strain_dir/COG_results"
+    log_message  "Creating subfolders for AgProtect..."
+    mkdir -p "$AgProtect/Homology_Analysis_results" \
+             "$AgProtect/DEG_results" \
+             "$AgProtect/VFDB_full_results" \
+             "$AgProtect/Final_results" \
+             "$AgProtect/PSORTb_results" \
+             "$AgProtect/VaxiJen_results" \
+             "$AgProtect/EMBOSS_results" \
+             "$AgProtect/SignalP_results" \
+             "$AgProtect/SPAAN_results" \
+             "$AgProtect/DeepTMHMM_results" \
+             "$AgProtect/COG_results"
 
     # Build the complete list of total protein IDs
-    local protein_file="$strain_dir/protein.faa"
+    local protein_file="$AgProtect/protein.faa"
     if [[ -f "$protein_file" ]]; then
-        grep ">" --binary-files=text "$protein_file" | awk '{print $1}' > "$strain_dir/AllProteinIds-$subdir_name.txt"
-        sed -i 's/>//g' "$strain_dir/AllProteinIds-$subdir_name.txt"
+        grep ">" --binary-files=text "$protein_file" | awk '{print $1}' > "$AgProtect/AllProteinIds-AgProtect.txt"
+        sed -i 's/>//g' "$AgProtect/AllProteinIds-AgProtect.txt"
     else
-        log_message  "WARNING: Protein file not found in $strain_dir. Skipping..."
+        log_message  "WARNING: Protein file not found in AgProtect!"
         return
     fi
 
