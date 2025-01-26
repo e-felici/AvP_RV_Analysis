@@ -55,7 +55,7 @@ create_blast_db() {
     # Check if there are any .faa files
     if ls *.faa > /dev/null 2>&1; then
         for fasta_file in *.faa; do
-            local db_name="${subdir}_db"  
+            local db_name=$(basename "$subdir")_db 
             log_message "Creating BLAST database for $subdir using $fasta_file..."
             #actually create the database:
             if makeblastdb -in "$fasta_file" -out "$db_name" -dbtype prot -title "$db_name" -parse_seqids; then
