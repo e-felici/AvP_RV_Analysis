@@ -25,7 +25,7 @@ tryCatch({
   Loc_files = list.files(paste0(AgProtect,"/PSORTb_results/"),
                          full.names = F)
   Bact_type <- read_tsv(paste0(AgProtect,"/BacteriaTypes.tsv"), 
-                        col_names = c("ID","Gram_Stain", "Genus"))
+                        col_names = TRUE)
   i = 1
   AllResults <- tibble("ID" = character(),
                        "SubcellularLocalization" = character(),
@@ -44,7 +44,7 @@ tryCatch({
     AllResults <- full_join(AllResults, Temp, by = c("ID","SubcellularLocalization", "Gram_Stain"))
   }
   
-  Bact_type2 <- Bact_type %>% select(-Genus)
+  Bact_type2 <- Bact_type %>% select(-Genus,-Bacteria)
   
   AllResults <- inner_join(AllResults,Bact_type2, by= join_by(ID, Gram_Stain))
   
