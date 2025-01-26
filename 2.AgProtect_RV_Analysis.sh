@@ -73,15 +73,15 @@ blast_against_databases() {
     # Loop through each folder in the database directory
     for DBfolder in "$DBDIR"/*; do
         # Remove trailing slash
-        DBfolder=${DBfolder%/}
+    local DB_SP=$(basename "$DBfolder")
 
-        echo "Processing BLAST for database: $DBfolder"
+        echo "Processing BLAST for database: $DB_SP"
 
         # Run BLASTP command
         blastp -evalue 100 \
             -query $AgProtect/protein.faa \
-            -db $DBfolder/${DBfolder}_db \
-            -out $AgProtect/Homology_Analysis_results/$DBfolder.out \
+            -db $DB_SP/${DB_SP}_db \
+            -out $AgProtect/Homology_Analysis_results/$DB_SP.out \
             -outfmt 6
     done
     
