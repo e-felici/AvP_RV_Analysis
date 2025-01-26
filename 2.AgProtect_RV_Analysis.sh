@@ -78,11 +78,7 @@ blast_against_databases() {
         echo "Processing BLAST for database: $DB_SP"
 
         # Run BLASTP command
-        blastp -evalue 100 \
-            -query $AgProtect/protein.faa \
-            -db $DB_SP/${DB_SP}_db \
-            -out $AgProtect/Homology_Analysis_results/$DB_SP.out \
-            -outfmt 6
+        blastp -evalue 100 -query $AgProtect/protein.faa -db $DBDIR/$DB_SP/${DB_SP}_db -out $AgProtect/Homology_Analysis_results/$DB_SP.out -outfmt 6
     done
     
 }
