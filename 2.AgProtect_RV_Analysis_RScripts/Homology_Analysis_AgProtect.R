@@ -34,7 +34,8 @@ tryCatch({
                           full.names = F)
   #List of antigens and hosts
   HostList <- read_tsv(paste0(AgProtect,"/HostList.tsv"), col_names = TRUE)
-  
+  HostList  <- HostList %>% mutate(Host = str_replace_all(Host, " ", ""))
+ 
   ######First, we process raw results for all species
   #Initialize variable i and vector conservation
   i = 1
