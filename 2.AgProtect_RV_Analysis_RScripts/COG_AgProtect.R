@@ -24,7 +24,7 @@ cat("Filtering, cleaning, and sorting COG results\n")
 tryCatch({
 #Read all necessary files
     ##Raw rps-blast results
-AllResults = read_tsv(paste0(AgProtect, "/COG_Results/AgProtect-vs_COG.out"), 
+AllResults = read_tsv(paste0(AgProtect, "/COG_results/AgProtect-vs_COG.out"), 
                       col_names = 1:12)
 
     ##Protein Ids
