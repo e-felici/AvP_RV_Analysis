@@ -20,7 +20,7 @@ if (length(args) != 1) {
 AgProtect <- args[1]
 
 # Print a message indicating the start of filtering, cleaning, and sorting the homology analysis results
-cat(paste0("Filtering, cleaning, and sorting the results of the homology analysis from \n", file))
+cat("Filtering, cleaning, and sorting the results of the homology analysis from AgProtect")
 
 
 # Attempt to read the TSV file containing the raw homology analysis results
