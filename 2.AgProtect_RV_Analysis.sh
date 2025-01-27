@@ -397,43 +397,43 @@ if [[ ! -f HostList.tsv ]]; then
 fi
 
 #####Part 2: Pre-process each strain folder
-prepare_analysis || { log_message  "Error in pre-processing proteins from AgProtect"; return 1; }
+prepare_analysis || { log_message  "Error in pre-processing proteins from AgProtect"; exit 1; }
 
 #####Part 3: Blastp against several databases
-blast_against_databases || { log_message  "Error in blastp analysis for proteins in AgProtect"; return 1; }
+blast_against_databases || { log_message  "Error in blastp analysis for proteins in AgProtect"; exit 1; }
 #Moving some files to their corresponding place
 mv "$AgProtect"/Homology_Analysis_results/DEG_bacteria.out "$AgProtect"/DEG_results/AgProtect-vs_DEG.out
 mv "$AgProtect"/Homology_Analysis_results/VFDB_full.out "$AgProtect"/DEG_results/AgProtect-vs_VFDB.out
 
 #####Part 4: Homology analysis
-Rscript "$RScripts"/Homology_Analysis_AgProtect.R "$AgProtect" || { log_message  "Error in homology analysis for proteins in AgProtect"; return 1; }
+Rscript "$RScripts"/Homology_Analysis_AgProtect.R "$AgProtect" || { log_message  "Error in homology analysis for proteins in AgProtect"; exit 1; }
 
 #####Part 5: Search for essential proteins with DEG
-Rscript "$RScripts"/DEG_AgProtect.R "$AgProtect" || { log_message  "Error in essentiality analysis for proteins in AgProtect"; return 1; }
+Rscript "$RScripts"/DEG_AgProtect.R "$AgProtect" || { log_message  "Error in essentiality analysis for proteins in AgProtect"; exit 1; }
 
 #####Part 6: Identification of virulence factors with VFDB
-Rscript "$RScripts"/VFDB_AgProtect.R "$AgProtect" || { log_message  "Error in virulence analysis for proteins in AgProtect"; return 1; }
+Rscript "$RScripts"/VFDB_AgProtect.R "$AgProtect" || { log_message  "Error in virulence analysis for proteins in AgProtect"; exit 1; }
 
 #####Part 7: Protein characterization with pepstats (EMBOSS)
-characterization || { log_message  "Error in characterization of proteins in AgProtect"; return 1; }
+characterization || { log_message  "Error in characterization of proteins in AgProtect"; exit 1; }
 
 #####Part 8: Subcellular localization prediction with PSORTb
-localization || { log_message  "Error in finding subcellular localization of proteins in AgProtect"; return 1; }
+localization || { log_message  "Error in finding subcellular localization of proteins in AgProtect"; exit 1; }
 
 #####Part 9: Signal peptides prediction with SignalP
-signal_peptide  || { log_message  "Error in finding signal peptides of proteins in AgProtect"; return 1; }
+signal_peptide  || { log_message  "Error in finding signal peptides of proteins in AgProtect"; exit 1; }
         
 #####Part 10: Adhesin Identification with SPAAN
-adhesin_identification || { log_message  "Adhesin identification failed for AgProtect"; return 1; }
+adhesin_identification || { log_message  "Adhesin identification failed for AgProtect"; exit 1; }
         
 #####Part 11: Search for antigenic proteins with VaxiJen
-vaxijen || { log_message  "Antigenic proteins identification failed for AgProtect"; return 1; }
+vaxijen || { log_message  "Antigenic proteins identification failed for AgProtect"; exit 1; }
         
 #####Part 12: Transmembrane Topology Prediction and Classification with DeepTMHMM
-deeptmhmm  || { log_message  "Transmembrane Topology Prediction failed for AgProtect"; return 1; }
+deeptmhmm  || { log_message  "Transmembrane Topology Prediction failed for AgProtect"; exit 1; }
         
 #####Part 13: COG Analysis with RPS-BLAST
-COG  || { log_message  "COG Analysis with RPS-BLAST failed for AgProtect"; return 1; }
+COG  || { log_message  "COG Analysis with RPS-BLAST failed for AgProtect"; exit 1; }
         
 #####Part 14: Run R script for final output processing
 Rscript "$RScripts"/Final_polishing_AgProtect.R "$AgProtect" || {
