@@ -22,7 +22,7 @@ cat("Filtering, cleaning, and sorting EMBOSS results\n")
 
 tryCatch({
   # Read raw results 
-  lines <- readLines(paste0(AgProtect,"/EMBOSS_results/EMBOSS-", subdir))
+  lines <- readLines(paste0(AgProtect,"/EMBOSS_results/EMBOSS-AgProtect"))
   
   #Extract and polish the IDs
   IDs <- lines[grep("PEPSTATS", lines)] %>% strsplit((" ")[[1]][3]) %>% unlist() %>% as_tibble()
