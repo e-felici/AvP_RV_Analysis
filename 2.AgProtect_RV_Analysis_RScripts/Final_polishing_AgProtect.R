@@ -34,7 +34,7 @@ tryCatch({
     reduce(full_join, by = "ID")  
 
 # Write the final results to a TSV file
-write_tsv(ALL, paste0(AgProtect,"/Final_Results-AgProtect.tsv"))
+write_tsv(ALL, paste0(AgProtect,"/Final_results-AgProtect.tsv"))
 rm(list = ls())
 
 }, 
