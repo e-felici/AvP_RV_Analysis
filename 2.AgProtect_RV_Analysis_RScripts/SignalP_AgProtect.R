@@ -22,7 +22,7 @@ cat("Filtering, cleaning, and sorting the results of the homology analysis\n")
 
 tryCatch({
   #Read raw results
-  lines <- as.tibble(read_tsv(AgProtect,"/SignalP_results/prediction_results.txt", skip = 1))
+  lines <- as.tibble(read_tsv(paste0(AgProtect,"/SignalP_results/prediction_results.txt"), skip = 1))
   
   #Polish results
   colnames(lines)[1:2] = c("ID", "SignalPeptide")
