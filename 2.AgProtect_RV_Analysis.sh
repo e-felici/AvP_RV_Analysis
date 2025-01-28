@@ -128,6 +128,9 @@ localization() {
 
 signal_peptide() {
     log_message  '--------Signal peptides prediction with SignalP--------'
+    #removing descriptions
+    seqkit replace -p "\s.+" "$AgProtect"/protein.faa > "$AgProtect"/SignalP_results/protein.faa
+    
     #Starting analysis with SignalP
     signalp6 \
     --fastafile "$AgProtect"/protein.faa \
