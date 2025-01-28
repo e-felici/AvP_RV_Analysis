@@ -37,7 +37,6 @@ tryCatch({
   HostList  <- HostList %>% mutate(Host = str_replace_all(Host, " ", ""))
  
   ######First, we process raw results for all species
-  #Initialize variable i and vector conservation
   i = 1
   AllResults <- tibble("ID" = character(),
                    "Host" = character(),
@@ -46,7 +45,6 @@ tryCatch({
                    "Host.Evalue" = double(),
                    "Host.Bitscore" = double())
   
-  #Entropy analysis for all files
   for (i in 1:length(Hom_files)) {
     
     raw <- read_tsv(paste0(AgProtect,"/Homology_Analysis_results/", Hom_files[i]),
@@ -74,16 +72,16 @@ tryCatch({
   
   # Combine the raw results and the missing IDs
   Temp <- rbind(out, MissingIDs)
+  Temp$Host.IdentityPercent <- as.double(Temp$Host.IdentityPercent)
+  Temp$Host.Bitscore <- as.double(Temp$Host.Bitscore)
+  Temp$Host.Evalue <- as.double(Temp$Host.Evalue)
   
   AllResults <- full_join(AllResults, Temp, by = c("ID", "Host", "Host.Homologue",
                                                    "Host.IdentityPercent", "Host.Evalue", 
                                                    "Host.Bitscore"))
   }
-  # Arrange the combined data frame by the first column. Keep only distinct proteins
-  AllResults <- arrange(AllResults, ID) %>%
-    distinct(ID, .keep_all = TRUE)
-
-  #
+  
+  
   write_tsv(AllResults, paste0(AgProtect,"/Homology_Analysis_results/AgProtect-Homology-all.tsv"))
   
   ######Then, we filter only the hosts that are relevant for that antigen
@@ -92,63 +90,53 @@ tryCatch({
     separate_rows(Host, sep = ";")
   
   AllResults$Host_Homologue_Result <- ifelse(AllResults$Host.Homologue == "-",
-                                             "Non Host_Homologue",
-                                             "Host Homologue")
+                                             "Non_Host_Homologue",
+                                             "Host_Homologue")
+  AllResults <- AllResults %>%
+    mutate(Host = str_remove(Host, "\\.out$"))
+  
+  # Keep distinct strings in 'ID' that maximize Bit Score
+  AllResults <- AllResults%>%
+    group_by(ID, Host) %>% 
+    arrange(desc(Host.Bitscore), desc(Host.IdentityPercent)) %>% # Sort by BitScore and then idpercent (both descending)
+    slice(1) %>%                                # Keep the first row in each group
+    ungroup()       
   
   AllResults <- inner_join(AllResults,HostList2, by= join_by(ID,Host))
   
   rm(HostList2)
   
-  AllResults <- AllResults %>%
-    select(ID, Host, Host_Homologue_Result) %>%
-    pivot_wider(names_from = Host, values_from = Host_Homologue_Result) %>%
-    mutate(across(everything(), ~ replace_na(.x, "-")))
-  
-  # Transform the tibble
-  AllResults <- AllResults %>%
-    rowwise() %>%
+  data <- AllResults %>%
+    group_by(ID) %>%
     mutate(
-      Host_Homologue_Result = {
-        # Get all non-missing valid values (exclude "-") except ID column
-        valid_values <- c_across(-ID) %>%  # Exclude ID from c_across
-          keep(~ .x != "-")
-        
-        # Determine the result based on the unique valid values
-        unique_values <- unique(valid_values)
-        
-        case_when(
-          all(unique_values == "Host Homologue") ~ "Host Homologue",
-          all(unique_values == "Non Host Homologue") ~ "Non Host Homologue",
-          length(unique_values) > 1 ~ "Host Homologue and Non Host Homologue, depending on the strain",
-          TRUE ~ NA_character_
-        )
-      }
+      Host_Homologue_Result_All = case_when(
+        all(Host_Homologue_Result == "Host_Homologue") ~ "Host Homologue",
+        all(Host_Homologue_Result == "Non_Host_Homologue") ~ "Non Host Homologue",
+        TRUE ~ "Host Homologue and Non Host Homologue, depending on the Host"
+      )
     ) %>%
     ungroup()
   
-  AllResults <- AllResults %>%
-    select(ID,Host_Homologue_Result) %>%
-    mutate(
-      Host.Homologue = "See:AgProtect-Homology-all.tsv",
-      Host.IdentityPercent = "See:AgProtect-Homology-all.tsv",
-      Host.Evalue = "See:AgProtect-Homology-all.tsv",
-      Host.Bitscore= "See:AgProtect-Homology-all.tsv"
+  compressed_data <- data %>%
+    group_by(ID) %>%
+    summarize(
+      Host = paste(Host, collapse = ";"),
+      Host.Homologue = paste(Host.Homologue, collapse = ";"),
+      Host.IdentityPercent = paste(Host.IdentityPercent, collapse = ";"),
+      Host.Evalue = paste(Host.Evalue, collapse = ";"),
+      Host.Bitscore = paste(Host.Bitscore, collapse = ";"),
+      .groups = "drop"
     )
   
-  AllResults <- inner_join(HostList, AllResults, by = "ID")
-  
-  rm(HostList)
-  
-  # Arrange the combined data frame by the first column. Keep only distinct proteins
-  AllResults <- arrange(AllResults, ID, Host.Bitscore) %>%
+  data <- data%>%
+    select(ID, Host_Homologue_Result_All) %>%
     distinct(ID, .keep_all = TRUE)
   
-  
+AllResults <- full_join(compressed_data,data, by="ID")
   # Write the final results to a TSV file
   write_tsv(AllResults, paste0(AgProtect,"/Final_results/AgProtect-Homology-final.tsv"))
   
-  rm(list = ls())
-  
+  rm(list = ls())  
   }, 
 # Catch any errors that may occur during execution
 error = function(e) {
