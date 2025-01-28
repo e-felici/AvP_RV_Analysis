@@ -403,7 +403,7 @@ prepare_analysis || { log_message  "Error in pre-processing proteins from AgProt
 blast_against_databases || { log_message  "Error in blastp analysis for proteins in AgProtect"; exit 1; }
 #Moving some files to their corresponding place
 mv "$AgProtect"/Homology_Analysis_results/DEG_bacteria.out "$AgProtect"/DEG_results/AgProtect-vs_DEG.out
-mv "$AgProtect"/Homology_Analysis_results/VFDB_full.out "$AgProtect"/VFDB_results/AgProtect-vs_VFDB.out
+mv "$AgProtect"/Homology_Analysis_results/VFDB_full.out "$AgProtect"/VFDB_full_results/AgProtect-vs_VFDB.out
 
 #####Part 4: Homology analysis
 Rscript "$RScripts"/Homology_Analysis_AgProtect.R "$AgProtect" || { log_message  "Error in homology analysis for proteins in AgProtect"; exit 1; }
