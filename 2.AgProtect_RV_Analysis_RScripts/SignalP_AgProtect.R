@@ -18,7 +18,7 @@ if (length(args) != 1) {
 
 AgProtect <- args[1]
 
-cat("Filtering, cleaning, and sorting the results of the homology analysis\n")
+cat("Filtering, cleaning, and sorting signalP results\n")
 
 tryCatch({
   #Read raw results
