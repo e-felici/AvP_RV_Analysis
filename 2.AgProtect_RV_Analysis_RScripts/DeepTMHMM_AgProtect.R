@@ -22,7 +22,7 @@ cat("Filtering, cleaning, and sorting DeepTMHMM results\n")
 
 tryCatch({
   # Step 1: Combine all predicted_topologies* files into one
-  type_files <- list.files(paste0(AgProtect,"/DeepTMHMM_Results"),
+  type_files <- list.files(paste0(AgProtect,"/DeepTMHMM_results"),
                            pattern = "^predicted_topologies", full.names = TRUE)
   
   #Initialize things
@@ -49,7 +49,7 @@ tryCatch({
   
   
   # Step 2: Copy and process TMRs* files
-  TMR_files <- list.files(paste0(AgProtect,"/DeepTMHMM_Results"), 
+  TMR_files <- list.files(paste0(AgProtect,"/DeepTMHMM_results"), 
                           pattern = "^TMRs", full.names = TRUE)
   
   #Initialize things
