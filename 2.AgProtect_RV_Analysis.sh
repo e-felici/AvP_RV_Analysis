@@ -106,7 +106,7 @@ localization() {
  	-n \ #Gram negative
  	-o terse \
  	-v
-    mv "$AgProtect"/PSORTb_results/*gramneg.txt "$AgProtect"/PSORTb_results/GramNegative
+    mv "$AgProtect"/PSORTb_results/*gramneg.txt "$AgProtect"/PSORTb_results/Negative
 
     $Psortb \
  	-i "$AgProtect"/protein.faa \
@@ -114,10 +114,10 @@ localization() {
  	-p \ #Gram positive
  	-o terse \
  	-v
-    mv "$AgProtect"/PSORTb_results/*grampos.txt "$AgProtect"/PSORTb_results/GramPositive
+    mv "$AgProtect"/PSORTb_results/*grampos.txt "$AgProtect"/PSORTb_results/Positive
     
-    mv "$GramAdv"/GramPositiveWithOM "$AgProtect"/PSORTb_results/GramPositiveWithOM
-    mv "$GramAdv"/GramNegativeWithoutOM "$AgProtect"/PSORTb_results/GramNegativeWithoutOM
+    mv "$GramAdv"/Positive_with_OM "$AgProtect"/PSORTb_results/
+    mv "$GramAdv"/Negative_without_OM "$AgProtect"/PSORTb_results/
     
     # Run R script for output processing
     Rscript "$RScripts"/PSORTb_AgProtect.R "$AgProtect"  || {
