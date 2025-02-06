@@ -83,5 +83,5 @@ rm(list = ls())
 # Catch any errors that may occur during execution
 error = function(e) {
   # Print a warning message if an error occurs
-  warning(paste0("Error arranging COG results: ", conditionMessage(e)))
+  warning(paste0("Error arranging PSORTb results: ", conditionMessage(e)))
 })
