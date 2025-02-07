@@ -48,7 +48,7 @@ while IFS= read -r line; do
 done < "$file"
 
 # Verify that all arguments are set
-if [ -z "$AgProtect" ] ||  || [ -z "$FinalRes" ] || [ -z "$RScripts" ] ; then
+if [ -z "$AgProtect" ] || [ -z "$FinalRes" ] || [ -z "$RScripts" ] ; then
     echo "Error: The file must contain all the arguments!"
     exit 1
 fi
