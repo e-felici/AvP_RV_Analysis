@@ -443,7 +443,6 @@ Rscript "$RScripts"/Final_polishing_AgProtect.R "$AgProtect" || {
       	log_message  "ERROR: R script failed for AgProtect"
        	exit 1
     	}
-cp "$AgProtect"/Final_results-AgProtect.tsv "$FinalRes"/
 
 popd 
 echo "-------- End of most of the analysis for strain AgProtect --------"
