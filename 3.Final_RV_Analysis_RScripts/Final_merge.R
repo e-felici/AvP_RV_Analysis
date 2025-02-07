@@ -39,7 +39,7 @@ tryCatch({
   Results <- inner_join(Results, Conservation, by = "ID")
   
   #Adding Experimental Antigens
-  AgProtect <- read_tsv(paste0(AgProtect,"/Final_Results-AgProtect.tsv"), col_names = TRUE)
+  AgProtect <- read_tsv(paste0(AgProtect,"/Final_results-AgProtect.tsv"), col_names = TRUE)
   
   Results <- full_join(Results, AgProtect, by = NULL)
   
