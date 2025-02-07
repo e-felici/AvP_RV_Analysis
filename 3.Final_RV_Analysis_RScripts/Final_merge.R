@@ -23,7 +23,7 @@ tryCatch({
   #All AvP strains
   #Read files and extract info
   file_list <- list.files(path = FinalRes, 
-                          pattern = "Final_Results-", 
+                          pattern = "Final_results-", 
                           full.names = T)
   # Read all files and assign tibbles named after the files (without extensions)
   file_tibbles <- file_list %>%
