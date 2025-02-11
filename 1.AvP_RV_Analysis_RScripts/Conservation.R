@@ -153,6 +153,10 @@ final_results$Conservation_Results <- ifelse(final_results$Strain_count > num_su
 
 final_results$ID <- final_results$ID %>% str_replace("\\.1", "")
 
+  final_results <- final_results %>% 
+  distinct() %>%
+  arrange(ID)
+  
 # Save the final results
 write_tsv(final_results, paste0(FinalRes,"/Conservation_results.tsv"))
 
