@@ -12,15 +12,21 @@ library("magrittr")
 
 # Get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
-if (length(args) != 1) {
-  stop("Path to AgProtect argument is required")
+if (length(args) != 2) {
+  stop("Missing required arguments!")
 }
 
 AgProtect <- args[1]
+WorkDir <- args[2]
 
 tryCatch({
   #Read files and extract info
-
+  subfolders <- list.dirs(WorkDir, full.names = TRUE, 
+                          recursive = FALSE)
+  
+  # Count the number of subfolders
+  num_subfolders <- length(subfolders)
+  
   Info <- read_lines(paste0(AgProtect,"/protein.faa")) %>%
     keep(~ str_starts(.x, ">")) %>%
     tibble(Full_Header = .)  %>%
@@ -30,10 +36,10 @@ tryCatch({
       ID = str_extract(Full_Header, "^[^_]+_[^_]+"),             # Extract the IDs (includes one underscore)
       Description = str_remove(Full_Header, "^[^_]+_[^_]+_?"),
       Strain = "Experimental_Antigens",
-      Mean_Schneider_Entropy = "-", 
-      Strain_count = "-", 
-      Cluster_Number = "-",
-      Conservation = "-"
+      Mean_Schneider_Entropy = "0", 
+      Strain_count = num_subfolders, 
+      Cluster_Number = "0",
+      Conservation = "1"
     )
   
   # Arrange the combined data frame by the first column. Keep only distinct
