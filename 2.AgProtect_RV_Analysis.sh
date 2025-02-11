@@ -60,7 +60,7 @@ prepare_analysis() {
 
     # Run R script for output processing
     log_message  "Running R script for AgProtect..."
-    Rscript "$RScripts/Info_AgProtect.R" "$AgProtect" || {
+    Rscript "$RScripts/Info_AgProtect.R" "$AgProtect" "$WorkDir" || {
         log_message  "ERROR: R script failed for AgProtect"
         exit 1
     }
