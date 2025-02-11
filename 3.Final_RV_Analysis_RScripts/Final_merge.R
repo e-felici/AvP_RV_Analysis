@@ -10,7 +10,7 @@ library("forcats")
 library("magrittr")
 
 # Get the command line arguments
-args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
+args <- commandArgs(trailingOnly = TRUE)  
 if (length(args) != 2) {
   stop("Two arguments are required!")
 }
@@ -36,10 +36,11 @@ tryCatch({
   
   Conservation <- read_tsv(paste0(FinalRes,"/Conservation_results.tsv"), col_names = TRUE)  
   
-  Results <- inner_join(Results, Conservation, by = "ID")
+  Results <- left_join(Results, Conservation, by = "ID")
   
   #Adding Experimental Antigens
   AgProtect <- read_tsv(paste0(AgProtect,"/Final_results-AgProtect.tsv"), col_names = TRUE)
+  AgProtect$Mean_Schneider_Entropy <- as.double(AgProtect$Mean_Schneider_Entropy)
   
   Results <- full_join(Results, AgProtect, by = NULL)
   
