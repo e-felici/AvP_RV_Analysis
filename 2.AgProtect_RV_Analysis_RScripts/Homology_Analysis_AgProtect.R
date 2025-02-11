@@ -133,6 +133,11 @@ tryCatch({
     distinct(ID, .keep_all = TRUE)
   
 AllResults <- full_join(compressed_data,data, by="ID")
+
+AllResults  <- AllResults %>% mutate(Host.IdentityPercent = str_replace_all(Host.IdentityPercent, "NA", "-"))
+AllResults  <- AllResults %>% mutate(Host.Evalue = str_replace_all(Host.Evalue, "NA", "-"))
+AllResults  <- AllResults %>% mutate(Host.Bitscore = str_replace_all(Host.Bitscore, "NA", "-"))
+
   # Write the final results to a TSV file
   write_tsv(AllResults, paste0(AgProtect,"/Final_results/AgProtect-Homology-final.tsv"))
   
