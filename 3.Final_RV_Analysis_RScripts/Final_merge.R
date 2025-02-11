@@ -54,6 +54,10 @@ tryCatch({
                                                          "2 or more Alpha helix Transmembrane Steps"),
                                                   "Secreted")))
   
+  Results$Host_Homologue_Result_All <- ifelse(Results$Strain == "Experimental_Antigens",
+                                              Results$Host_Homologue_Result_All,
+                                              Results$Host_Homologue_Result)
+  
   write_tsv(Results, paste0(FinalRes, "/AllStrains_AgProtect_Final_results.tsv"))
   
   rm(list = ls())
