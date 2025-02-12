@@ -100,7 +100,6 @@ Ag_COG <- full_join(Ag_COG, COG, by = c("Strain", "COG_category_u"))
 # Add percentage column
 Ag_COG <- Ag_COG %>%
   mutate(Ag_Percentage = Ag_or_NonAg_proteins_COG * 100 / Total_Number_of_proteins_per_Strain) %>%
-  na.omit() %>%
   filter(!str_starts(Strain, "Exp"))
 
 # Calculate the mean percentage of antigenic proteins per COG category
