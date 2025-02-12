@@ -14,7 +14,7 @@ Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental Antigens")
 
 # Find total number of proteins per strain
-Strain_number = group_by(Results, Strain) %>% 
+Strain_number <- group_by(Results, Strain) %>% 
   summarise("Total_Number_of_proteins_per_Strain"=n()) 
 
 # Select relevant columns and group by Strain and COG_category_u, then summarize
@@ -27,14 +27,14 @@ COG <- Results %>%
 
 ##### Grafico Exposition ####
 #filtro
-Exposed = filter(Results, AntigenicityResult ==  "ANTIGEN" & 
+Exposed <- filter(Results, AntigenicityResult ==  "ANTIGEN" & 
                    Host_Homologue_Result_All ==  "Non Host Homologue")
 
-SL_COG = group_by(Exposed, SubcellularLocalization, Strain, COG_category_u) %>%
+SL_COG <- group_by(Exposed, SubcellularLocalization, Strain, COG_category_u) %>%
   summarise(Exposed_or_Not_proteins_COG=n())
 
 #agrupo
-Exposed = group_by(Exposed, Exposition, SubcellularLocalization, Strain) %>%
+Exposed <- group_by(Exposed, Exposition, SubcellularLocalization, Strain) %>%
   summarise(Exposed_or_Not_proteins=n()) 
 
 #Agrego el total de cada grupo
