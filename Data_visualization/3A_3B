@@ -52,7 +52,6 @@ Antigenics <- full_join(Antigenics, Host, by = "Strain")
 rm(Host)
 
 # Rename columns for clarity
-# Rename the column 'old_name' to 'new_name'
 Antigenics <- Antigenics %>%
   rename(Total_Non_HH_proteins = Host_Homologue_or_NonHH_Proteins )
 
