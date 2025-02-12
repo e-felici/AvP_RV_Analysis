@@ -5,8 +5,10 @@ library(ggpubr)
 library(patchwork)
 
 #Define paths
-load("~/bin/bin/RScripts/Paper1/Paper1_workspace_Definitivo.RData")
+results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
 output_path <- "~/Desktop/Graficos"
+
+Results <- read_tsv(results_path)
 
 #Remove underscore
 Results$Strain <- str_replace_all(Results$Strain,
