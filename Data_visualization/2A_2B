@@ -28,9 +28,9 @@ COG <- Results %>%
 # Create and polish Host Homologue tibble
 Host <- Results %>%
   group_by(Host_Homologue_Result_All, Strain) %>%
-  summarise(Amount_of_Host_Homologue_Proteins = n()) %>%
+  summarise(Host_Homologue_or_NonHH_Proteins = n()) %>%
   full_join(Strain_number, by = "Strain") %>%
-  mutate(Percentage_Host = Amount_of_Host_Homologue_Proteins * 100 / Total_Number_of_proteins_per_Strain)
+  mutate(Percentage_Host = Host_Homologue_or_NonHH_Proteins * 100 / Total_Number_of_proteins_per_Strain)
 
 write_tsv(Host, paste0(output_path,"/Host.tsv"))
 
@@ -52,7 +52,7 @@ p2A <- ggplot(Host, aes(fill=Host_Homologue_Result_All, y=Percentage_Host, x=Str
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)
-        ) +
+  ) +
   coord_flip() + 
   labs(y = "Percentage of proteins",
        tag = "2A") +
