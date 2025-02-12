@@ -10,7 +10,6 @@ output_path <- "~/Desktop/Graficos"
 
 Results <- read_tsv(results_path)
 
-
 #Remove underscore
 Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental_Antigens",
@@ -62,7 +61,7 @@ Antigenics <- select(Antigenics, -Host_Homologue_Result_All,
 # Add percentage columns
 Antigenics <- Antigenics %>%
   mutate(
-    Percentage_antigenic_NonHH = Ag_or_NonAg_proteins * 100 / Total_Non_HH_proteins,
+     Percentage_Antigenic_or_Not = Ag_or_NonAg_proteins * 100 / Total_Non_HH_proteins,
     Percentage_antigenic_Total = Ag_or_NonAg_proteins * 100 / Strain_number$Total_Number_of_proteins_per_Strain
   )
 
@@ -72,11 +71,11 @@ write_tsv(Antigenics, paste0(output_path,"/Antigenics.tsv"))
 Mean_Percentage_Antigenic <- Antigenics %>%
   filter(AntigenicityResult == "NON-ANTIGEN", 
          Strain != "Experimental Antigens") %>%
-  summarise(mean_percentage = round(mean(Percentage_antigenic_NonHH), digits = 2)) %>%
+  summarise(mean_percentage = round(mean( Percentage_Antigenic_or_Not), digits = 2)) %>%
   pull(mean_percentage)
 
 # Create the first plot (Grafico 2)
-p3A <- ggplot(Antigenics, aes(fill = AntigenicityResult, y = Percentage_antigenic_NonHH, 
+p3A <- ggplot(Antigenics, aes(fill = AntigenicityResult, y =  Percentage_Antigenic_or_Not, 
                              x = Strain)) + 
   geom_bar(position = "stack", stat = "identity", show.legend = FALSE) + 
   scale_fill_manual(values = c("olivedrab", "#9e2f28"), labels = c('Antigenic', 'Non Antigenic')) +
