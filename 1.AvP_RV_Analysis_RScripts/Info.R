@@ -31,7 +31,8 @@ tryCatch({
       Description = str_remove(Full_Header, "^[^_]+_[^_]+_?"),
       Strain = subdir,
       Genus = "Avibacterium",
-      Gram_Stain = "Negative"
+      Gram_Stain = "Negative",
+      Bacteria = "Avibacterium_paragallinarum"
     )
   
   # Arrange the combined data frame by the first column. Keep only distinct
