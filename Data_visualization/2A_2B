@@ -14,7 +14,8 @@ Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental Antigens")
 
 # Find total number of proteins per strain
-Strain_number = group_by(Results, Strain) %>% summarise("Total_Number_of_proteins_per_Strain"=n()) 
+Strain_number = group_by(Results, Strain) %>% 
+  summarise("Total_Number_of_proteins_per_Strain"=n()) 
 
 # Select relevant columns and group by Strain and COG_category_u, then summarize
 COG <- Results %>%
@@ -30,6 +31,8 @@ Host <- Results %>%
   summarise(Amount_of_Host_Homologue_Proteins = n()) %>%
   full_join(Strain_number, by = "Strain") %>%
   mutate(Percentage_Host = Amount_of_Host_Homologue_Proteins * 100 / Total_Number_of_proteins_per_Strain)
+
+write_tsv(Host, paste0(output_path,"/Host.tsv"))
 
 # Calculate the mean percentage of non-host homologue proteins
 Mean_Percentage_Host <- Host %>%
