@@ -66,6 +66,8 @@ Antigenics <- Antigenics %>%
     Percentage_antigenic_Total = Ag_or_NonAg_proteins * 100 / Strain_number$Total_Number_of_proteins_per_Strain
   )
 
+write_tsv(Antigenics, paste0(output_path,"/Antigenics.tsv"))
+
 # Calculate the mean percentage of non-antigenic proteins
 Mean_Percentage_Antigenic <- Antigenics %>%
   filter(AntigenicityResult == "NON-ANTIGEN", 
