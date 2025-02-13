@@ -78,6 +78,7 @@ This repository contains the scripts and workflows used in the identification an
 ```
 .
 ├── AgProtect_data
+│   ├── Final_results-AgProtect.tsv    #RV Analysis of the experimentally tested antigens
 │   ├── protein.faa      # Fasta file of the collection of experimentally tested antigens
 │   ├── BacteriaTypes.tsv         # Gram stain and genus of each antigen
 │   └── HostList.tsv         # Hosts for each antigen
@@ -116,6 +117,102 @@ This repository contains the scripts and workflows used in the identification an
 │   └──Final_merge.R
 ├── VaxiJen.py
 ├── Final_results        # Polished output files
+│   ├── Conservation_results.tsv
+│   ├── Final_results-GCA_020892835.1.tsv
+│   ├── Final_results-GCF_000221945.2.tsv
+│   ├── Final_results-GCF_000348525.1.tsv
+│   ├── Final_results-GCF_000442905.1.tsv
+│   ├── Final_results-GCF_000969305.1.tsv
+│   ├── Final_results-GCF_000969315.2.tsv
+│   ├── Final_results-GCF_002921155.1.tsv
+│   ├── Final_results-GCF_003204245.1.tsv
+│   ├── Final_results-GCF_003204295.1.tsv
+│   ├── Final_results-GCF_003864155.1.tsv
+│   ├── Final_results-GCF_004212345.1.tsv
+│   ├── Final_results-GCF_004212355.1.tsv
+│   ├── Final_results-GCF_004212375.1.tsv
+│   ├── Final_results-GCF_004212415.1.tsv
+│   ├── Final_results-GCF_004931865.1.tsv
+│   ├── Final_results-GCF_008633115.1.tsv
+│   ├── Final_results-GCF_011765605.1.tsv
+│   ├── Final_results-GCF_012849875.1.tsv
+│   ├── Final_results-GCF_012850075.1.tsv
+│   ├── Final_results-GCF_012850275.1.tsv
+│   ├── Final_results-GCF_012850455.1.tsv
+│   ├── Final_results-GCF_012850655.1.tsv
+│   ├── Final_results-GCF_012850815.1.tsv
+│   ├── Final_results-GCF_012850955.1.tsv
+│   ├── Final_results-GCF_015354775.1.tsv
+│   ├── Final_results-GCF_015354785.1.tsv
+│   ├── Final_results-GCF_015354815.1.tsv
+│   ├── Final_results-GCF_015354825.1.tsv
+│   ├── Final_results-GCF_015354845.1.tsv
+│   ├── Final_results-GCF_015354865.1.tsv
+│   ├── Final_results-GCF_015354885.1.tsv
+│   ├── Final_results-GCF_015354895.1.tsv
+│   ├── Final_results-GCF_015354935.1.tsv
+│   ├── Final_results-GCF_015354955.1.tsv
+│   ├── Final_results-GCF_015354975.1.tsv
+│   ├── Final_results-GCF_015354985.1.tsv
+│   ├── Final_results-GCF_015354995.1.tsv
+│   ├── Final_results-GCF_015355035.1.tsv
+│   ├── Final_results-GCF_015355055.1.tsv
+│   ├── Final_results-GCF_015355065.1.tsv
+│   ├── Final_results-GCF_015355095.1.tsv
+│   ├── Final_results-GCF_015355125.1.tsv
+│   ├── Final_results-GCF_019822885.1.tsv
+│   ├── Final_results-GCF_020523945.1.tsv
+│   ├── Final_results-GCF_022964995.1.tsv
+│   ├── Final_results-GCF_025884415.1.tsv
+│   ├── Final_results-GCF_025884555.1.tsv
+│   ├── Final_results-GCF_026802155.1.tsv
+│   ├── Final_results-GCF_026811325.1.tsv
+│   ├── Final_results-GCF_036348495.1.tsv
+│   ├── Final_results-GCF_036348515.1.tsv
+│   ├── Final_results-GCF_036348535.1.tsv
+│   ├── Final_results-GCF_036348555.1.tsv
+│   ├── Final_results-GCF_036351875.1.tsv
+│   ├── Final_results-GCF_036400095.1.tsv
+│   ├── Final_results-GCF_036400115.1.tsv
+│   ├── Final_results-GCF_036400155.1.tsv
+│   ├── Final_results-GCF_036400175.1.tsv
+│   ├── Final_results-GCF_036400195.1.tsv
+│   ├── Final_results-GCF_036400215.1.tsv
+│   ├── Final_results-GCF_036400235.1.tsv
+│   ├── Final_results-GCF_036400255.1.tsv
+│   ├── Final_results-GCF_036400275.1.tsv
+│   ├── Final_results-GCF_036400285.1.tsv
+│   ├── Final_results-GCF_036400315.1.tsv
+│   ├── Final_results-GCF_036400335.1.tsv
+│   ├── Final_results-GCF_036400355.1.tsv
+│   ├── Final_results-GCF_036400375.1.tsv
+│   ├── Final_results-GCF_036400395.1.tsv
+│   ├── Final_results-GCF_036400415.1.tsv
+│   ├── Final_results-GCF_036400435.1.tsv
+│   ├── Final_results-GCF_036400455.1.tsv
+│   ├── Final_results-GCF_036400475.1.tsv
+│   ├── Final_results-GCF_036400495.1.tsv
+│   ├── Final_results-GCF_036400515.1.tsv
+│   ├── Final_results-GCF_036400535.1.tsv
+│   ├── Final_results-GCF_036400555.1.tsv
+│   ├── Final_results-GCF_036400595.1.tsv
+│   ├── Final_results-GCF_036400615.1.tsv
+│   ├── Final_results-GCF_036400635.1.tsv
+│   ├── Final_results-GCF_036400645.1.tsv
+│   ├── Final_results-GCF_036400675.1.tsv
+│   ├── Final_results-GCF_036400695.1.tsv
+│   ├── Final_results-GCF_036400715.1.tsv
+│   ├── Final_results-GCF_036400735.1.tsv
+│   ├── Final_results-GCF_036400755.1.tsv
+│   ├── Final_results-GCF_036400775.1.tsv
+│   ├── Final_results-GCF_036400795.1.tsv
+│   ├── Final_results-GCF_036400835.1.tsv
+│   ├── Final_results-GCF_036400895.1.tsv
+│   ├── Final_results-GCF_036400915.1.tsv
+│   ├── Final_results-GCF_036400955.1.tsv
+│   ├── Final_results-GCF_037080095.1.tsv
+│   ├── Final_results-GCF_900445345.1.tsv
+│   └── Final_results-GCF_900450705.1.tsv
 └── README.md            # Documentation
 ```
 
