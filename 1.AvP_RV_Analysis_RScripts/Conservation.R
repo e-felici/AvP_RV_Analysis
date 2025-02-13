@@ -40,6 +40,9 @@ subfolders <- list.dirs(WorkDir, full.names = TRUE,
 # Count the number of subfolders
 num_subfolders <- length(subfolders)
 
+#We assume that 90% of strains is a reasonable amount of strains
+num_subfolders <- round(90 * num_subfolders / 100, digits = 0)
+
 #Initialize variable i and vector conservation
 i = 1
 Tibble <- tibble(Cluster_Number = character(), Mean_Schneider_Entropy = double())
@@ -140,16 +143,25 @@ for (i in i:length(IDs)) {
 final_results$Conservation = 1 - final_results$Mean_Schneider_Entropy
 
 final_results$Conservation_Results <- ifelse(final_results$Strain_count > num_subfolders, 
-                                             ifelse(final_results$Conservation > 0.8,
-                                                    ifelse(final_results$Conservation > 0.95,
-                                                           paste0("Conservation Score > 0.95, more than ", num_subfolders, " strains"),
-                                                           paste0("Conservation Score > 0.80, more than ", num_subfolders, " strains")),
-                                                    paste0("Conservation Score < 0.80, more than ", num_subfolders, " strains")),
-                                             ifelse(final_results$Conservation > 0.8,
-                                                    ifelse(final_results$Conservation > 0.95,
-                                                           paste0("Conservation Score > 0.95, less than ", num_subfolders, " strains"),
-                                                           paste0("Conservation Score > 0.80, less than ", num_subfolders, " strains")),
-                                                    paste0("Conservation Score < 0.80, less than ", num_subfolders, " strains")))
+
+					     ifelse(final_results$Conservation > 0.95,
+						    "Conservation Score > 0.95, more than 90% of the strains",
+						    ifelse(final_results$Conservation > 0.8,
+							"Conservation Score > 0.80, more than 90% of the strains",
+							"Conservation Score < 0.80, more than 90% of the strains"
+							  )
+						    ),
+
+					     ifelse(final_results$Conservation > 0.95,
+						    "Conservation Score > 0.95, less than 90% of the strains",
+						    ifelse(final_results$Conservation > 0.8,
+							   "Conservation Score > 0.80, less than 90% of the strains",
+							   "Conservation Score < 0.80, less than 90% of the strains"
+						          )
+						   )
+					     )
+
+
 
 final_results$ID <- final_results$ID %>% str_replace("\\.1", "")
 
