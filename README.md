@@ -78,26 +78,26 @@ This repository contains the scripts and workflows used in the identification an
 ```
 .
 ├── AgProtect_data
-│   ├── Final_results-AgProtect.tsv    #RV Analysis Results of the experimentally tested antigens
-│   ├── protein.faa      # Fasta file of the collection of experimentally tested antigens
-│   ├── BacteriaTypes.tsv         # Gram stain and genus of each antigen
-│   └── HostList.tsv         # Hosts for each antigen
-├── 0.DB_creation.sh
-├── 1.AvP_RV_Analysis.sh              #RV analysis of Av. paragallinarum strains
-├── 1.AvP_RV_Analysis_RScripts        #R scripts for this step
-├── 2.AgProtect_RV_Analysis.sh         #RV analysis of the experimental antigens
-├── 2.AgProtect_RV_Analysis_RScripts #R scripts for this step
-├── 3.Final_RV_Analysis.sh          #Final processing
-├── 3.Final_RV_Analysis_RScripts   #R script for the final step of the analysis
-├── VaxiJen.py          #Script for VaxiJen web scraping
-├── Final_results        # Polished output files
+│   ├── Final_results-AgProtect.tsv               # RV Analysis Results of the experimentally tested antigens
+│   ├── protein.faa                               # Fasta file of the collection of experimentally tested antigens
+│   ├── BacteriaTypes.tsv                         # Gram stain and genus of each antigen
+│   └── HostList.tsv                              # List of Hosts for each antigen
+├── 0.DB_creation.sh                              # Shell script to build BLAST databases
+├── 1.AvP_RV_Analysis.sh                          # RV analysis of Av. paragallinarum strains
+├── 1.AvP_RV_Analysis_RScripts                    # R scripts for this step
+├── 2.AgProtect_RV_Analysis.sh                    # RV analysis of the experimental antigens
+├── 2.AgProtect_RV_Analysis_RScripts              # R scripts for this step
+├── 3.Final_RV_Analysis.sh                        # Final processing
+├── 3.Final_RV_Analysis_RScripts                  # R script for the final step of the analysis
+├── VaxiJen.py                                    # Python Script for VaxiJen web scraping
+├── Final_results                                 # Polished output files
 │   ├── Conservation_results.tsv
 │   ├── Final_results-GCA_020892835.1.tsv
 │   ├── Final_results-GCF_000221945.2.tsv
 │   ├── Final_results-GCF_000348525.1.tsv
 │   ├──  ... 91 files ...
 │   └── Final_results-GCF_900450705.1.tsv
-└── README.md            # This Documentation
+└── README.md                                     # This Documentation
 ```
 
 ## Acknowledgments
