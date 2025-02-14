@@ -46,6 +46,8 @@ rm(Conserv1, Conserv2)
 Conserved <- Conserved %>%
   mutate(Percentage_Conserved_or_Not = Conserved_or_Not_proteins *100 / Total_Exposed_proteins)
 
+write_tsv(Conserved, paste0(output_path,"/Conserved.tsv"))
+
 Conserved <- Conserved%>% filter(substr(Strain, 1, 3) != "Exp")
 
 
