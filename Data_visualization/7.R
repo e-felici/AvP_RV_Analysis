@@ -2,7 +2,6 @@ library(tidyverse)
 library(ggplot2)
 library(ggimage)
 library(patchwork)
-library(png)
 
 results_path <- "~/Busqueda_antigenos/All_Final_results"
 output_path <- "~/Desktop/Graficos"
