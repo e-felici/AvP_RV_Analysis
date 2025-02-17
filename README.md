@@ -18,6 +18,12 @@ This repository contains the scripts and workflows used in the identification an
      - [Rpdb](https://cran.r-project.org/web/packages/Rpdb/index.html) v. 2.3.4
      - [seqinr](https://cran.r-project.org/web/packages/seqinr/index.html) v. 4.2.36
      - [BALCONY](https://cran.r-project.org/src/contrib/Archive/BALCONY/) v. 0.2.10
+     - [patchwork](https://patchwork.data-imaginist.com/) v. 1.3.0
+     - [grid]( https://CRAN.R-project.org/package=grid) v. 4.4.2
+     - [GGally](https://cran.r-project.org/web/packages/GGally/index.html) v. 2.2.1
+     - [ggtext](https://cran.r-project.org/web/packages/ggtext/index.html) v. 0.1.2
+     - [ggpubr](https://cran.r-project.org/web/packages/ggpubr/index.html) v. 0.6.0
+     - [ggimage](https://cran.r-project.org/web/packages/ggimage/index.html) v. 0.3.3
          
   - Python (at least v. 3.9.12) and these python packages:
     - [pyperclip v. 1.9.0](https://pypi.org/project/pyperclip/)
