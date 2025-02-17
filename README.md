@@ -90,7 +90,7 @@ This repository contains the scripts and workflows used in the identification an
 ├── 3.Final_RV_Analysis.sh                        # Final processing
 ├── 3.Final_RV_Analysis_RScripts                  # R script for the final step of the analysis
 ├── VaxiJen.py                                    # Python Script for VaxiJen web scraping
-├── Final_results                                 # Polished output files
+├── All_Strains_Final_results                                 # Polished output files
 │   ├── Conservation_results.tsv
 │   ├── Final_results-GCA_020892835.1.tsv
 │   ├── Final_results-GCF_000221945.2.tsv
