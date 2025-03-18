@@ -44,7 +44,7 @@ Mean_Percentage_Host <- Host %>%
 
 # Create the first plot (Figure 2A)
 p2A <- ggplot(Host, aes(fill=Host_Homologue_Result_All, y=Percentage_Host, x=Strain)) + 
-  geom_bar(position="stack", stat="identity", show.legend = FALSE) + 
+  geom_bar(position="stack", stat="identity") + 
   scale_fill_manual(values =c("#9e2f28","#e1ccd1","olivedrab")) +
   theme(axis.title = element_text(family = "Times New Roman", size=16, color = "black"), 
         title = element_text(family = "Times New Roman", size=16, color = "black"), 
@@ -52,7 +52,9 @@ p2A <- ggplot(Host, aes(fill=Host_Homologue_Result_All, y=Percentage_Host, x=Str
         axis.text = element_text(family = "Times New Roman", size = 11, color = "black"),
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
-                                        linewidth = 0.3)
+                                        linewidth = 0.3),
+        legend.title = element_blank(),
+        legend.position = "bottom"
   ) +
   coord_flip() + 
   labs(y = "Percentage of proteins",
@@ -85,8 +87,7 @@ p2B <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
   theme(axis.title = element_text(family = "Times New Roman"), 
         axis.text = element_text(family = "Times New Roman", size = 16, color = "black"),
         title = element_text(family = "Times New Roman"), 
-        legend.title=element_blank(),
-        legend.position="bottom",
+        legend.position = "none",
         text = element_text(family = "Times New Roman", size = 16), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
@@ -99,7 +100,8 @@ p2B
 
 # Arrange the two plots side by side
 ggarrange(p2A, p2B, 
-          ncol = 2, nrow = 1)
+          ncol = 2, nrow = 1,
+          common.legend = T, legend = "bottom")
 
 # Save the combined plot as a PNG file
 ggsave("2A&B.png", device = "png", path = output_path, 
