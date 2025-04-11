@@ -60,6 +60,10 @@ All <- All %>%
 Localization`, 
 Conservation))
 
+All <- All %>% 
+  mutate(Percentage_retained = Conservation * 100 / `Homology\nwith Host`)
+
+
 All_Ag <- All %>%
   filter(Strain=="Experimental Antigens")%>%
   mutate(Group= "Experimental Antigens")
@@ -84,7 +88,7 @@ All$alphaLevel <- c("Av. paragallinarum individual strains" = 0.15,
                        "Experimental Antigens" = 1, 
                        "Mean of Av. paragallinarum strains" = 1)[All$Group]
 
-grob <- grobTree(textGrob("*", x=0.89,  y=0.27, hjust=0,
+grob <- grobTree(textGrob("*", x=0.89,  y=0.25, hjust=0,
                           gp=gpar(col="orangered3", fontsize=18, fontface="bold")))
 
 All$labelss <- c("Av. paragallinarum individual strains" = "*Av. paragallinarum* individual strains",
@@ -102,7 +106,7 @@ ggparcoord(All,
            mapping = ggplot2::aes(linewidth = 1.5)
 ) +
   ggplot2::scale_linewidth_identity() +
-  scale_color_manual(values = c("deepskyblue", "orangered3","navyblue"))  +
+  scale_color_manual(values = c("olivedrab", "#0073C2FF","#25482f"))  +
   theme(axis.text.x=element_text(colour="black"),
         axis.text.y=element_text(colour="black"),
         text = element_text(family = "Times New Roman", size = 16), 

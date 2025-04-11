@@ -25,6 +25,22 @@ COG <- Results %>%
   full_join(Strain_number, by = "Strain")
 
 
+Exp_Total <- Results %>%
+  group_by(SubcellularLocalization, Strain) %>%
+  summarise(Exp_or_NonExp_proteins_total = n())
+
+Exp_Total <- full_join(Exp_Total, Strain_number)
+
+Exp_Total <- Exp_Total %>%
+  mutate(Percentage_Exp_Total = Exp_or_NonExp_proteins_total * 100 / Total_Number_of_proteins_per_Strain )
+
+AgProt_Tot <- Exp_Total %>%
+  filter(Strain == "Experimental Antigens") 
+
+Mean_Percentage_Exp_Total <- Exp_Total %>%
+  filter(Strain != "Experimental Antigens") %>%
+  summarise(mean_percentage = round(mean(Percentage_Exp_Total), digits = 2)) 
+
 ##### Grafico Exposition ####
 #filtro
 Exposed <- filter(Results, AntigenicityResult ==  "ANTIGEN" & 
@@ -74,7 +90,7 @@ Mean_Percentage_Exposed <- Exposed %>%
 
 Mean_Percentage_Exposed <- sum(Mean_Percentage_Exposed$mean_percentage)
 
-p4A <- ggplot(Exposed, aes(
+p4C <- ggplot(Exposed, aes(
   fill= factor(SubcellularLocalization, 
                levels=c( "Cellwall", "Cytoplasmic",  "Unknown",
                          "CytoplasmicMembrane","Periplasmic", "Extracellular", "OuterMembrane")), 
@@ -99,7 +115,7 @@ p4A <- ggplot(Exposed, aes(
        tag = "4A")  +
   geom_hline(yintercept = Mean_Percentage_Exposed, color = "blue")
 
-p4A
+p4C
 
 #Agrego el total de cada grupo
 SL_COG = full_join(SL_COG, COG, by=c("Strain", "COG_category_u"))
@@ -137,25 +153,86 @@ p4B <- ggplot(means_SL, aes(fill=factor(SubcellularLocalization,
         legend.title=element_blank(),
         text = element_text(family = "Times New Roman", size = 16), 
         legend.text = element_text(family = "Times New Roman", size = 16),
-        legend.position = "bottom",
+        legend.position = "inside",
+        legend.position.inside = c(0.85, 0.8),
+        legend.box = "vertical",
+        legend.direction = "vertical",
         legend.location = "plot",
         legend.key.size = unit(0.5, 'cm'),
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean for all strains", 
+  labs(y = "Mean Percentage of Proteins", 
        x = "COG category",
-       tag = "4B")
+       tag = "B")
 
 p4B
 
-ggarrange(p4A, p4B,
-          ncol = 2, nrow = 1,
-          legend = "bottom",
-          common.legend = T)
+Exposed <- Exposed %>% 
+  mutate(
+    SL_Percent = Exposed_or_Not_proteins * 100 / Total_Ag_proteins,
+    Group = ifelse(Strain == "Experimental Antigens",
+                   "Experimental Antigens",
+                   "*Av. paragallinarum* strains")
+  )
 
-ggsave("4A&B.png", device = "png", path = "~/Desktop/Graficos", 
-       width =4200, height = 3500, units="px")
+Exposed <- Exposed %>%
+  mutate(SubcellularLocalization = recode(SubcellularLocalization,
+                                          "Cellwall" = "Cell Wall", 
+                                          "Cytoplasmic" = 'Cytoplasm',
+                                          "CytoplasmicMembrane" = 'Citoplasmic\nMembrane', 
+                                          "Extracellular" = 'Extracellular\nSpace',
+                                          "OuterMembrane" = 'Outer\nMembrane',
+                                          "Periplasmic" = 'Periplasmic\nSpace', 
+                                          "Unknown" = 'Unknown\nLocalization'))
+AgProt <- Exposed %>%
+  filter(Strain == "Experimental Antigens")
+
+Exposed <- Exposed %>%
+  filter(Strain != "Experimental Antigens")
+
+p4A <- ggplot(Exposed, aes(x = SubcellularLocalization, y = SL_Percent)) +
+  geom_violin(width = 1.4, aes(fill = SubcellularLocalization), alpha= 0.4) +
+  scale_fill_manual(values =c("#9e2f28","#deb867","olivedrab","#25482f",
+                              "#4f2f4a","#e1ccd1", "sienna2")) +
+  geom_point(data=AgProt, aes(x=SubcellularLocalization, y=SL_Percent, 
+                              color=SubcellularLocalization), 
+             size = 7, shape = 18) +
+  scale_color_manual(values =c("sienna2","#9e2f28","#deb867",
+                               "olivedrab","#25482f",
+                               "#4f2f4a","#e1ccd1" )) +
+  theme(
+    text = element_text(family = "Times New Roman", size = 16, color = "black"), 
+    axis.title = element_markdown(),
+    legend.position = "none",
+    plot.caption = element_markdown(halign = 0, hjust = 0.95),
+    legend.title = element_blank(),
+    axis.text.y = element_text(family = "Times New Roman", size = 16, color = "black"),
+    axis.text.x = element_text(family = "Times New Roman", size = 13, color = "black"),
+    panel.background = element_rect(fill = "white"), 
+    panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                    linewidth = 0.3)
+  ) + 
+  labs(
+    y = "Percentage of Proteins in each subcellular<br>localization (Antigenic, Non-Homologous to Host)",
+    tag = "A",
+    x = "",
+    caption = "٥ *Av. paragallinarum* strains<br>◆ Experimental Antigens  "
+  ) + 
+  ylim(0, 60)
+
+p4A
+
+
+layout <- '
+AAA
+BBB
+'
+wrap_plots(A = p4A, B = p4B, design = layout)
+
+# Save the combined plot as a PNG file
+#ggsave("4A&B.png", device = "png", path = output_path, 
+ #      width =3500, height = 2000, units="px")
 
 
 
