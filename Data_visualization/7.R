@@ -56,8 +56,7 @@ cluster_mapping <- c("3841" = "Peptidoglycan-associated lipoprotein Pal",
                      "522" = "BamA/TamA family outer membrane protein", 
                      "267" = "TonB-dependent hemoglobin/transferrin/lactoferrin family receptor",
                      "209" = "Outer membrane protein assembly factor BamA",
-                     "191" = "TonB-dependent receptor plug domain-containing protein",
-                     "49" = "Filamentous hemagglutinin N-terminal domain-containing protein")
+                     "191" = "TonB-dependent receptor plug domain-containing protein")
 
 # Replace the values in Cluster_Number with letters
 Candidates <- Candidates %>%
@@ -71,7 +70,8 @@ Candidates <- Candidates %>%
                              "Non Virulence Factor")
          )
 
-#write_tsv(Candidates, paste0(output_path,"/Antigen_Candidates.tsv"))
+
+write_tsv(Candidates, paste0(output_path,"/Antigen_Candidates.tsv"))
 
 temp_pi <- Candidates %>%
   group_by(Protein) %>%
@@ -105,13 +105,20 @@ temp_cog <- Candidates %>%
   slice_max(n, n = 1, with_ties = FALSE) %>%
   ungroup()
 
+temp_Conserv1 <- Candidates %>%
+  group_by(Protein) %>%
+  count(Conservation_Results) %>%
+  slice_max(n, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
 temp_a <- inner_join(temp_essen, temp_mw, by = "Protein")
 temp_b <- inner_join(temp_pi, temp_type, by = "Protein")
 temp_c <- inner_join(temp_vf, temp_cog, by = "Protein")
 
 temp_d <- inner_join(temp_a, temp_b, by = "Protein")
+temp_e <- inner_join(temp_c, temp_Conserv1, by = "Protein")
 
-All <- inner_join(temp_c, temp_d, by = "Protein")
+All <- inner_join(temp_e, temp_d, by = "Protein")
 
 rm(list = ls(pattern = '^temp_'))
 
