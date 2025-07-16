@@ -55,21 +55,22 @@ This repository contains the scripts and workflows used in the identification an
 - Descriptions of COG (cog-20.def.tab) and COG functional categories (fun-20.tab) from the [COG2020 FTP-archive](https://ftp.ncbi.nih.gov/pub/COG/COG2020/)
 
 ## Usage
-0. Download all the required data. Ensure all external tools are installed and accessible in your system's PATH and install all necessary R and python packages
+0. Download all the required data. Ensure all external tools are installed and accessible in your system's PATH and install all necessary R and python packages.
 
+The shell scripts are meant to be used in numerical order. Each script is detailed in their corresponding header, but briefly:
 1. Create the required blastp databases with 0.DB_creation.sh script:
    ```bash
    ./0.DB_creation.sh <path/to/database_directory>
    ```
 
-2. Create a file_of_paths (See [example]()). You only need one for use in all the scripts
+2. Create a file_of_paths (See [example]()). You only need one for use in all the scripts.
 
-3. Analyze the different Av. paragallinarum strains with 1.AvP_RV_Analysis.sh script:
+3. Analyse the different *Av. paragallinarum* strains with 1.AvP_RV_Analysis.sh script:
    ```bash
    ./1.AvP_RV_Analysis.sh <path/to/file_of_paths>
    ```
 
-4. Analyze the different experimentally tested antigens with 2.AgProtect_RV_Analysis.sh script
+4. Analyse the different experimentally tested antigens with 2.AgProtect_RV_Analysis.sh script
    ```bash
    ./2.AgProtect_RV_Analysis.sh <path/to/file_of_paths>
    ```
@@ -96,7 +97,7 @@ This repository contains the scripts and workflows used in the identification an
 ├── 3.Final_RV_Analysis.sh                        # Final processing
 ├── 3.Final_RV_Analysis_RScripts                  # R script for the final step of the analysis
 ├── VaxiJen.py                                    # Python Script for VaxiJen web scraping
-├── All_Strains_Final_results                                 # Polished output files
+├── All_Strains_Final_results                     # Polished output files
 │   ├── Conservation_results.tsv
 │   ├── Final_results-GCA_020892835.1.tsv
 │   ├── Final_results-GCF_000221945.2.tsv
@@ -105,6 +106,9 @@ This repository contains the scripts and workflows used in the identification an
 │   └── Final_results-GCF_900450705.1.tsv
 └── README.md                                     # This Documentation
 ```
+
+## Disclaimer
+All scripts are provided as is, for reproducibility purposes only. No attempt has been made to optimise the code.
 
 ## Acknowledgments
 We would like to express our gratitude to CONICET (Consejo Nacional de Investigaciones Científicas y Técnicas) and to the Universidad Nacional de Córdoba (UNC) for their support and funding.
