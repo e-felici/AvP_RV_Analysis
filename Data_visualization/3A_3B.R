@@ -2,6 +2,7 @@
 library(tidyverse)
 library(ggplot2)
 library(ggpubr) 
+library(ggtext)
 
 #Define paths
 results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
