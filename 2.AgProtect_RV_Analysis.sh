@@ -302,12 +302,20 @@ deeptmhmm() {
 COG() {
     log_message  '--------COG Analysis with RPS-BLAST--------'
 
+    pushd $COG
     #Running rps-blast
-    rpsblast -evalue 100 \
-           -query "$AgProtect"/protein.faa \
-           -db "$COG"/Cog_LE/Cog \
-           -out "$AgProtect"/COG_results/AgProtect-vs_COG.out \
-           -outfmt 6  
+    ./rpsblast -query "$AgProtect"/protein.faa \
+    -db "$COG"/db/Cog \
+    -evalue 0.01 \
+    -outfmt 11 \
+    -out "$AgProtect"/COG_results/AgProtect-multi_protein.asn
+    
+    #running rpsbproc
+    ./rpsbproc -i "$AgProtect"/COG_results/AgProtect-multi_protein.asn \
+    -o "$AgProtect"/COG_results/AgProtect-multi_protein.out \
+    -e 0.01 \
+    -m rep
+    popd
 
     # Run R script for output processing
     Rscript "$RScripts"/COG_AgProtect.R "$AgProtect" "$COG" || {
