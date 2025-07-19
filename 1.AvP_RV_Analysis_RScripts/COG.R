@@ -20,10 +20,6 @@ MAIN <- args[1]
 subdir <- args[2]
 COG <- args[3]
 
-MAIN <-"~/Busqueda_antigenos/ALL"
-subdir <- "GCF_000442905.1"
-COG <- "~/rpsbproc"
-
 cat("Filtering, cleaning, and sorting COG results\n")
 tryCatch({
   ####### Read all necessary files####### 
