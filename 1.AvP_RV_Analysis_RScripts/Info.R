@@ -38,7 +38,7 @@ tryCatch({
   # Arrange the combined data frame by the first column. Keep only distinct
   Info <- arrange(Info, ID) %>%
     distinct(ID, .keep_all = TRUE) %>%
-    select(ID, Description, Strain, Genus, Gram_Stain)
+    select(ID, Description, Strain, Genus, Gram_Stain, Bacteria)
   Info$ID <- Info$ID %>% str_replace("\\.1", "")
   
   # Write the final results to a TSV file

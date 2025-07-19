@@ -371,12 +371,21 @@ COG() {
 
     log_message  '--------COG Analysis with RPS-BLAST--------'
 
+    pushd $COG
     #Running rps-blast
-    rpsblast -evalue 100 \
-           -query "$WorkDir"/"$subdir_name"/protein.faa \
-           -db "$COG"/Cog_LE/Cog \
-           -out "$WorkDir"/"$subdir_name"/COG_results/"$subdir_name"-vs_COG.out \
-           -outfmt 6  
+    ./rpsblast -query "$WorkDir"/"$subdir_name"/protein.faa \
+    -db "$COG"/db/Cog \
+    -evalue 0.01 \
+    -outfmt 11 \
+    -out "$WorkDir"/"$subdir_name"/COG_results/"$subdir_name"-multi_protein.asn
+    
+    #running rpsbproc
+    ./rpsbproc -i "$WorkDir"/"$subdir_name"/COG_results/"$subdir_name"-multi_protein.asn \
+    -o "$WorkDir"/"$subdir_name"/COG_results/"$subdir_name"-multi_protein.out \
+    -e 0.01 \
+    -m rep
+    
+    popd
 
     # Run R script for output processing
     Rscript "$RScripts"/COG.R "$WorkDir" "$subdir_name" "$COG" || {
