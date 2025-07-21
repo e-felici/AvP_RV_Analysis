@@ -31,12 +31,6 @@ tryCatch({
                            col_names = "ID")
   AllProteinIds$ID <- AllProteinIds$ID %>% str_replace("\\.1", "")
   
-  ##Summary info about the CD models
-  cddid <- as.tibble(read_tsv(paste0(COG, "/data/cddid.tbl"), 
-                              col_names = F))
-  colnames(cddid)[1:2] = c("PSSM_ID","COG_ID")
-  cddid$PSSM_ID <- as.character(cddid$PSSM_ID)
-  
   ## COG definitions: Info about COG descriptions
   cogdef <- as.tibble(read_tsv(paste0(COG, "/data/cog-24.def.tab"), 
                                col_names = F))
@@ -66,55 +60,52 @@ tryCatch({
   
   
   ###### Raw results Processing ######
-  # Find all SITES and ENDSITES indices
-  sites_starts <- grep("^SITES", lines)
-  sites_ends <- grep("^ENDSITES", lines)
+  to_remove <- grep("^#", lines)
   
-  # Build a vector of all lines to remove
-  to_remove <- unlist(mapply(function(start, end) start:end, sites_starts, sites_ends))
-  to_remove2 <- grep("#", lines)
-  to_remove3 <- grep("DATA", lines)
-  to_remove4 <- grep("SESSION", lines)
-  
-  to_remove <- c(to_remove, to_remove2,to_remove3,to_remove4)
-  
-  # Keep only lines not in to_remove
   lines_clean <- lines[-to_remove]
   
   #clean
-  rm(list = ls(pattern = "^to_remove"))
-  rm(list = ls(pattern = "^sites"))
+  rm(to_remove)
   
   # Find indices of QUERY and DOMAINS lines
   query_idx <- grep("^QUERY", lines_clean)
   domain_idx <- grep("^DOMAINS", lines_clean)
   
-  # Extract 5th column from QUERY lines: IDs
-  query_ids <- sapply(strsplit(lines_clean[query_idx], "\\s+"), `[`, 5)
+  query_ids <- as.tibble(lines_clean[query_idx])
+  domain_9 <- tibble(lines_clean[domain_idx + 1])
   
-  # For each DOMAINS, extract the 9th column from the next line (the domain data line): PSSM_IDs
-  domain_9th <- sapply(domain_idx, function(i) {
-    domain_line <- lines_clean[i + 1]
-    strsplit(domain_line, "\t")[[1]][4]
-  })
+  split_matrix_query <- str_split_fixed(query_ids$value, "\\s+", 12)
+  split_matrix_dom <- str_split_fixed(domain_9$`lines_clean[domain_idx + 1]`, "\\s+", 12)
   
-  # Combine into a tibble
-  result <- tibble(
-    ID = query_ids,
-    PSSM_ID= domain_9th
-  )
+  query_ids <- as_tibble(split_matrix_query, .name_repair = "minimal")
+  domain_9 <- as_tibble(split_matrix_dom, .name_repair = "minimal")
   
-  result <- inner_join(result, cddid, by = "PSSM_ID")
+  colnames(query_ids) <- paste0("V", 1:12)
+  colnames(domain_9) <- paste0("V", 1:12)
   
-  #clean
-  rm(cddid)
+  query_ids <- query_ids %>%
+    distinct(V2, .keep_all = TRUE)
+  domain_9 <- domain_9 %>%
+    distinct(V2, .keep_all = TRUE)
+  
+  query_ids <- query_ids %>% select(V2, V5)
+  domain_9 <- domain_9 %>% select(V2, V9)
+  
+  result  <- full_join(query_ids, domain_9)
+  
   rm(list = ls(pattern = "^domain"))
   rm(list = ls(pattern = "^query"))
+  rm(list = ls(pattern = "^split"))
   rm(list = ls(pattern = "^lines"))
+  
+  result <- result %>% select(-V2)
+  colnames(result) <- c("ID", "COG_ID")
+  
+
   
   ##From COG IDs obtain COG Functional Categories 
   result <- left_join(result, cogdef, by = "COG_ID")
-  result <- result %>% select(ID, PSSM_ID, COG_ID, COG_categories)
+  result <- result %>% select(ID, COG_ID, COG_categories)
   
   # Extract only the first functional category
   result <- result %>% mutate(COG = substr(COG_categories, 1, 1))
@@ -133,10 +124,10 @@ tryCatch({
   
   rm(superfamily)
   
-  colnames(result_superfamily)[3] <- "cl_ID"
-  colnames(result_superfamily)[8] <- "COG_ID"
+  colnames(result_superfamily)[2] <- "cl_ID"
+  colnames(result_superfamily)[7] <- "COG_ID"
   
-  result_superfamily <- select(result_superfamily, ID, PSSM_ID, COG_ID)
+  result_superfamily <- select(result_superfamily, ID, COG_ID)
   
   result_superfamily <- left_join(result_superfamily, cogdef, by = "COG_ID")
   
@@ -144,7 +135,6 @@ tryCatch({
     group_by(ID) %>%
     summarise(
       COG_ID = str_c(COG_ID, collapse = ", "),
-      PSSM_ID = first(PSSM_ID),
       COG_categories = first(COG_categories)
     )
   
@@ -152,13 +142,13 @@ tryCatch({
   rm(cogdef)
   
   #On the other hand, some COG IDs are old, so here we use the manually curated file:    
-  result_COG_old <- inner_join(result_superfamily, COG_olds, by =c("COG_ID", "PSSM_ID"))
+  result_COG_old <- inner_join(result_superfamily, COG_olds, by ="COG_ID")
   
   rm(COG_olds)
   
-  result_COG_old <- result_COG_old %>% select(-COG_categories.x)
+  result_COG_old <- result_COG_old %>% select(-COG_categories.x, -PSSM_ID)
   
-  colnames(result_COG_old)[4] <- "COG_categories"
+  colnames(result_COG_old)[3] <- "COG_categories"
   
   result_superfamily <- result_superfamily %>% drop_na()
   

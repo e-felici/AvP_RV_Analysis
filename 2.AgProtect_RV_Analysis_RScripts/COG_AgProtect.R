@@ -22,99 +22,164 @@ COG <- args[2]
 cat("Filtering, cleaning, and sorting COG results\n")
 
 tryCatch({
-#Read all necessary files
-    ##Raw rps-blast results
-AllResults = read_tsv(paste0(AgProtect, "/COG_results/AgProtect-vs_COG.out"), 
-                      col_names = 1:12)
+####### Read all necessary files####### 
+##Raw results
+lines <- readLines(paste0(AgProtect, "/COG_results/AgProtect-multi_protein.out"))
 
-    ##Protein Ids
+##Protein Ids
 AllProteinIds = read_tsv(paste0(AgProtect, "/AllProteinIds-AgProtect.txt"),
                          col_names = "ID")
-
-    ##COG and CDD resources:
-      #Summary info about the CD models
-cddid <- as_tibble(read_tsv(paste0(COG, "/cddid.tbl"), 
-                            col_names = F))
-      #Polish tibble
-colnames(cddid)[1] = "CDDID"
-cddid$CDDID <- as.character(cddid$CDDID)
-
-      #Info about COG descriptions
-cogdef <- as_tibble(read_tsv(paste0(COG,"/cog-20.def.tab"), 
+## COG definitions: Info about COG descriptions
+cogdef <- as.tibble(read_tsv(paste0(COG, "/data/cog-24.def.tab"), 
                              col_names = F))
-      #Polish tibble
 cogdef <- select(cogdef, X1, X2)
-colnames(cogdef)[1] = "COGID"
+colnames(cogdef)[1:2] = c("COG_ID", "COG_categories")
 
-      #Descriptions of COG functional categories
-cogdet <- as_tibble(read_tsv(paste0(COG,"/fun-20.tab"), 
-                             col_names = F))
-      #Polish tibble
-colnames(cogdet)[1] = "COG"
+## Descriptions of COG functional categories
+cogdet <- as.tibble(read_tsv(paste0(COG, "/data/cog-24.fun.tab"), 
+                             col_names = F, comment = "#"))
+colnames(cogdet)[1:3] = c("COG", "General_Functional_Category", "COG_category_description")
 
+##Superfamily info: Descriptions of COG functional categories
+superfamily <- as.tibble(read_tsv(paste0(COG, "/data/family_superfamily_links"), 
+                                  col_names = F))
+colnames(superfamily)[1] <- "target"
+colnames(superfamily)[3] <- "COG_ID"
+superfamily <- superfamily %>%
+  filter(if_any(everything(), ~ str_detect(as.character(.), "COG")))
+superfamily <- superfamily %>% select(target, COG_ID)
 
-##From Best-hit results obtain CDD ID
-#Filter rows and subset data 
-index = ifelse(((AllResults$X11 < 1e-5) + (AllResults$X12 > 50) + (AllResults$X3 > 25)) == 3, TRUE, FALSE)
-AllResults = AllResults[index, c(1, 2, 3, 11, 12)]
+##Manually curated COGs (old)
+COG_olds <- as.tibble(read_tsv(paste0(COG, "/data/cog_anot_manual.tbl"), 
+                               col_names = T))
+COG_olds$PSSM_ID <-  as.character(COG_olds$PSSM_ID) 
 
-# Polish data
-AllResults = AllResults %>% 
-  as_tibble() %>% 
-  group_by(X1) %>% 
-  filter(row_number() == 1)
-colnames(AllResults)[1] = "ID"
+###### Raw results Processing ######
+to_remove <- grep("^#", lines)
 
-# Merge data with IDs to add the proteins that do not fit into any of the COG categories
-AllResults <- full_join(AllResults, AllProteinIds, by = "ID")
+lines_clean <- lines[-to_remove]
 
-# Polish data
-AllResults$X2 <- gsub("CDD:", "", AllResults$X2)
-AllResults$X2 <- as.character(AllResults$X2)
-AllResults$X3 <- as.character(AllResults$X3)
-AllResults$X11 <- as.character(AllResults$X11)
-AllResults$X12 <- as.character(AllResults$X12)
-colnames(AllResults)[2] = "CDDID"
+#clean
+rm(to_remove)
 
-##From CDD IDs obtain COG IDs
-# Merge
-AllResults <- left_join(AllResults, cddid, by = "CDDID")
+# Find indices of QUERY and DOMAINS lines
+query_idx <- grep("^QUERY", lines_clean)
+domain_idx <- grep("^DOMAINS", lines_clean)
 
-# Polish data
-AllResults <- select(AllResults, ID, CDDID, X3.y, X4, X3.x, X11, X12, X2)
-colnames(AllResults)[8] = "COGID"
+query_ids <- as.tibble(lines_clean[query_idx])
+domain_9 <- tibble(lines_clean[domain_idx + 1])
+
+split_matrix_query <- str_split_fixed(query_ids$value, "\\s+", 12)
+split_matrix_dom <- str_split_fixed(domain_9$`lines_clean[domain_idx + 1]`, "\\s+", 12)
+
+query_ids <- as_tibble(split_matrix_query, .name_repair = "minimal")
+domain_9 <- as_tibble(split_matrix_dom, .name_repair = "minimal")
+
+colnames(query_ids) <- paste0("V", 1:12)
+colnames(domain_9) <- paste0("V", 1:12)
+
+query_ids <- query_ids %>%
+  distinct(V2, .keep_all = TRUE)
+domain_9 <- domain_9 %>%
+  distinct(V2, .keep_all = TRUE)
+
+query_ids <- query_ids %>% select(V2, V5)
+domain_9 <- domain_9 %>% select(V2, V9)
+
+result  <- full_join(query_ids, domain_9)
+
+rm(list = ls(pattern = "^domain"))
+rm(list = ls(pattern = "^query"))
+rm(list = ls(pattern = "^split"))
+rm(list = ls(pattern = "^lines"))
+
+result <- result %>% select(-V2)
+colnames(result) <- c("ID", "COG_ID")
 
 ##From COG IDs obtain COG Functional Categories 
-# Merge
-AllResults <- left_join(AllResults, cogdef, by = "COGID")
+result <- left_join(result, cogdef, by = "COG_ID")
+result <- result %>% select(ID, COG_ID, COG_categories)
 
 # Extract only the first functional category
-AllResults <- AllResults %>% mutate(COG = substr(X2, 1, 1))
+result <- result %>% mutate(COG = substr(COG_categories, 1, 1))
 
 ##Add little explanation about COG first functional categories
-# Merge
-AllResults <- left_join(AllResults, cogdet, by = "COG")
+result <- left_join(result, cogdet, by = "COG")
+
+#Some PSSM IDs are superfamily cluster records (i.e: start with "cl", check: 
+# https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#CDSequenceCluster)
+#And as a consequence, they could not be processed with previous code (NA rows).
+#So, to "translate" the to COG categories:
+result_superfamily <- result %>% 
+  filter(if_any(everything(), is.na))
+
+result_superfamily <- inner_join(result_superfamily, superfamily, by = "COG_ID")
+
+rm(superfamily)
+
+colnames(result_superfamily)[2] <- "cl_ID"
+colnames(result_superfamily)[7] <- "COG_ID"
+
+result_superfamily <- select(result_superfamily, ID, COG_ID)
+
+result_superfamily <- left_join(result_superfamily, cogdef, by = "COG_ID")
+
+result_superfamily <- result_superfamily %>%
+  group_by(ID) %>%
+  summarise(
+    COG_ID = str_c(COG_ID, collapse = ", "),
+    COG_categories = first(COG_categories)
+  )
+
+#clean  
+rm(cogdef)
+
+#On the other hand, some COG IDs are old, so here we use the manually curated file:    
+result_COG_old <- inner_join(result_superfamily, COG_olds, by ="COG_ID")
+
+rm(COG_olds)
+
+result_COG_old <- result_COG_old %>% select(-COG_categories.x, -PSSM_ID)
+
+colnames(result_COG_old)[3] <- "COG_categories"
+
+result_superfamily <- result_superfamily %>% drop_na()
+
+result_superfamily <- result_superfamily %>% mutate(COG = substr(COG_categories, 1, 1))
+
+result_superfamily <- left_join(result_superfamily, cogdet, by = "COG")
+
+rm(cogdet)
+
+result <- full_join(result, result_COG_old)
+result <- full_join(result, result_superfamily)
+
+rm(result_COG_old)
+rm(result_superfamily)
+
+result$ID <- result$ID %>% str_replace("\\.1", "")
+
+# Merge data with IDs to add the proteins that do not fit into any of the COG categories
+result <- full_join(result, AllProteinIds, by = "ID")
 
 #Polish data 
 replace_spaces <- function(column) {
   column %>% str_replace_all(" ", "_")
 }
-AllResults <- AllResults %>%
+result <- result %>%
   mutate(across(everything(), replace_spaces))
 
-colnames(AllResults)[1:12] <- c("ID", "PSSM-Id", "CD_short_name", "CD_description", 
-                            "COG_IdentityPercent", "COG.Evalue", "COG.Bitscore", "COG",
-                            "COG_category", "COG_category_u", "COG_color", 
-                            "COG_category_description")
-
+result <- result %>%
+  mutate(across(everything(), ~replace_na(., "-")))
 
 # Arrange the combined data frame by the first column. Keep only distinct
-AllResults <- arrange(AllResults, ID) %>%
+result <- arrange(result, ID) %>%
   distinct(ID, .keep_all = TRUE)
 
 # Write the final results to a TSV file
-write_tsv(AllResults, paste0(AgProtect,"/Final_results/COG-AgProtect-final.tsv"),
+write_tsv(result, paste0(AgProtect,"/Final_results/COG-AgProtect-final.tsv"),
           na = "-")
+
 rm(list = ls())
 
 }, 
