@@ -330,6 +330,8 @@ p4 <- ggplot(All, aes(x = Protein)) +
   scale_x_discrete(labels = scales::label_wrap(25))
 
 p4
+ggsave("7_lab3.png", device = "png", path = output_path, 
+       width =3300, height = 2600, units="px")
 
 p5 <- ggplot(All, aes(x = Protein)) + 
   geom_point(aes(y = 50, fill = AdhesinProbability2), size = 5) +
