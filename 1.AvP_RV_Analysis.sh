@@ -132,7 +132,7 @@ virulence() {
            -outfmt 6  
 
     # Run R script for output processing
-    Rscript "$RScripts"/VFDB.R "$WorkDir" "$subdir_name" || {
+    Rscript "$RScripts"/VFDB.R "$WorkDir" "$subdir_name" "$DBDIR" "$VF_cat" || {
         log_message  "ERROR: R script failed for $subdir_name"
         exit 1
     }    
@@ -430,10 +430,11 @@ while IFS= read -r line; do
         9) VaxiJen="$line" ;;
         10) Chromedriver="$line" ;;
         11) COG="$line" ;;
-	    12) ;;
+	12) ;;
         13) ;;
         14) ;;
-	    15) ;;
+	15) ;;
+	16) VF_cat="$line" ;;
         *) log_message  "Warning: File contains too many lines. Ignoring extra lines." ;;
     esac
 done < "$file"
@@ -442,7 +443,7 @@ done < "$file"
 if [ -z "$WorkDir" ] || [ -z "$MultiSeq" ] || [ -z "$ConsDir" ] || 
     [ -z "$FinalRes" ] || [ -z "$DBDIR" ] || [ -z "$RScripts" ] || 
     [ -z "$Psortb" ] || [ -z "$SPAAN" ] || [ -z "$VaxiJen" ] || 
-    [ -z "$Chromedriver" ] || [ -z "$COG" ] ; then
+    [ -z "$Chromedriver" ] || [ -z "$COG" ] || [ -z "$VF_cat" ]  ; then
     log_message  "Error: The file must contain all the arguments!"
     exit 1
 fi
@@ -460,6 +461,7 @@ log_message  "Path to SPAAN folder with all the files to run standalone SPAAN: $
 log_message  "Path to VaxiJen.py script: $VaxiJen"
 log_message  "Path to Chromedriver binary: $Chromedriver"
 log_message  "Path to COG folder with all COG and CDD resources: $COG"
+log_message  "Path to virulence factors categories: $VF_cat"
 
 pushd "$WorkDir"
 for strain_dir in "$WorkDir"/*; do

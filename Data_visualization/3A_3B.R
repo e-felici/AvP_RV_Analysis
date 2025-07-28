@@ -8,7 +8,7 @@ library(ggtext)
 results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
 output_path <- "~/Desktop/Graficos"
 
-Results <- read_tsv(results_path)
+Results <- read_tsv(results_path, col_names = T)
 
 #Remove underscore
 Results$Strain <- str_replace_all(Results$Strain,
@@ -19,13 +19,12 @@ Results$Strain <- str_replace_all(Results$Strain,
 Strain_number = group_by(Results, Strain) %>% 
   summarise("Total_Number_of_proteins_per_Strain"=n()) 
 
-# Select relevant columns and group by Strain and COG_category_u, then summarize
 COG <- Results %>%
-  select(ID, COG_category_u, Strain) %>%
-  group_by(Strain, COG_category_u) %>%
+  filter(Host_Homologue_Result_All == "Non Host Homologue") %>%
+  select(ID, COG_category_description, Strain) %>%
+  group_by(Strain, COG_category_description) %>%
   summarise(Total_Number_of_proteins_COG = n()) %>%
   full_join(Strain_number, by = "Strain")
-
 
 Ag_Total <- Results %>%
   group_by(AntigenicityResult, Strain) %>%
@@ -41,24 +40,12 @@ AgProt_Tot <- Ag_Total %>%
          Strain == "Experimental Antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Ag_Total), digits = 2)) %>%
   pull(mean_percentage)
-  
-Mean_Percentage_Ag_Total <- Ag_Total %>%
-  filter(AntigenicityResult == "ANTIGEN", 
-         Strain != "Experimental Antigens") %>%
-  summarise(mean_percentage = round(mean(Percentage_Ag_Total), digits = 2)) %>%
-  pull(mean_percentage)
 
 # Filter non-host homologue proteins
 Antigenics <- filter(Results, Host_Homologue_Result_All == "Non Host Homologue")
 
-# We assume that proteins that could not be processed by VaxiJen (because they 
-#had rare amino acids) are non antigenic
-Antigenics$AntigenicityResult <- ifelse(Antigenics$AntigenicityResult == "-",
-                                        "NON-ANTIGEN",
-                                        Antigenics$AntigenicityResult)
-
 Ag_COG <- Antigenics %>%
-  group_by(AntigenicityResult, Strain, COG_category_u) %>%
+  group_by(AntigenicityResult, Strain, COG_category_description) %>%
   summarise(Ag_or_NonAg_proteins_COG = n())
 
 Antigenics <- Antigenics %>%
@@ -82,72 +69,101 @@ Antigenics <- select(Antigenics, -Host_Homologue_Result_All,
 # Add percentage columns
 Antigenics <- Antigenics %>%
   mutate(
-     Percentage_Antigenic_or_Not = Ag_or_NonAg_proteins * 100 / Total_Non_HH_proteins,
+    Percentage_Antigenic_or_Not = Ag_or_NonAg_proteins * 100 / Total_Non_HH_proteins,
     Percentage_antigenic_Total = Ag_or_NonAg_proteins * 100 / Strain_number$Total_Number_of_proteins_per_Strain
   )
 
 write_tsv(Antigenics, paste0(output_path,"/Antigenics.tsv"))
 
-# Calculate the mean percentage of non-antigenic proteins
-Mean_Percentage_Antigenic <- Antigenics %>%
-  filter(AntigenicityResult == "NON-ANTIGEN", 
-         Strain != "Experimental Antigens") %>%
-  summarise(mean_percentage = round(mean( Percentage_Antigenic_or_Not), digits = 2)) %>%
-  pull(mean_percentage)
-
-# Create the first plot (Grafico 2)
-p3C <- ggplot(Antigenics, aes(fill = AntigenicityResult, y =  Percentage_Antigenic_or_Not, 
-                             x = Strain)) + 
-  geom_bar(position = "stack", stat = "identity", show.legend = FALSE) + 
-  scale_fill_manual(values = c("olivedrab", "#9e2f28"), labels = c('Antigenic', 'Non Antigenic')) +
-  theme(
-    axis.title = element_text(family = "Times New Roman", size = 16, color = "black"), 
-    title = element_text(family = "Times New Roman", size = 16, color = "black"), 
-    text = element_text(family = "Times New Roman", size = 16, color = "black"),
-    axis.text = element_text(family = "Times New Roman", size = 11, color = "black"),
-    panel.background = element_rect(fill = "white"), 
-    panel.grid.major = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
-  ) +
-  coord_flip() + 
-  labs(y = "Percentage of proteins",
-       tag = "3A") +
-  geom_hline(yintercept = Mean_Percentage_Antigenic, color = "blue")
-
-p3C
-
 # Add the total number of proteins per strain and COG category
-Ag_COG <- full_join(Ag_COG, COG, by = c("Strain", "COG_category_u"))
+Ag_COG <- full_join(Ag_COG, Antigenics, by = c("Strain", "AntigenicityResult"))
+
+Ag_COG <- Ag_COG %>% select(AntigenicityResult, Strain, COG_category_description,
+                            Ag_or_NonAg_proteins_COG, Total_Non_HH_proteins)
 
 # Add percentage column
+Ag_COG_AgProt <- Ag_COG %>%
+  mutate(Ag_Percentage = Ag_or_NonAg_proteins_COG * 100 / Total_Non_HH_proteins) %>%
+  filter(str_starts(Strain, "Exp"))
+
 Ag_COG <- Ag_COG %>%
-  mutate(Ag_Percentage = Ag_or_NonAg_proteins_COG * 100 / Total_Number_of_proteins_per_Strain) %>%
-  na.omit() %>%
+  mutate(Ag_Percentage = Ag_or_NonAg_proteins_COG * 100 / Total_Non_HH_proteins) %>%
   filter(!str_starts(Strain, "Exp"))
 
 # Calculate the mean percentage of antigenic proteins per COG category
 means_ag <- Ag_COG %>%
-  group_by(COG_category_u, AntigenicityResult) %>%
+  group_by(COG_category_description, AntigenicityResult) %>%
   summarize(mean_value = mean(Ag_Percentage))
 
-# Create the second plot (Grafico 2)
-p3B <- ggplot(means_ag, aes(fill = AntigenicityResult, y = mean_value, x = COG_category_u)) + 
-  geom_bar(position = "stack", stat = "identity") + 
-  scale_fill_manual(values = c("olivedrab", "#9e2f28"), labels = c('Antigenic', 'Non Antigenic')) +
-  theme(axis.title = element_markdown(), 
-    axis.text = element_text(family = "Times New Roman", size = 16, color = "black"),
-    title = element_text(family = "Times New Roman"),
-    legend.title = element_blank(),  
-    legend.position = "inside",
-    legend.position.inside = c(0.75, 0.9),
-    legend.box = "vertical",
-    legend.direction = "vertical",
-    text = element_text(family = "Times New Roman", size = 16), 
-    panel.background = element_rect(fill = "white"), 
-    panel.grid.major = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
-  ) + 
-  labs(y = "Mean Percentage of Proteins", 
+means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_description,
+                                                     "_",
+                                                     " ")
+
+means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_description,
+                                                     "-",
+                                                     "Proteins not assigned to any COG")
+
+means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_description,
+                                                     "Posttranslational",
+                                                     "Post-translational")
+
+means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
+                                               "NON-ANTIGEN",
+                                               "Non antigenic")
+means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
+                                               "ANTIGEN",
+                                               "Antigenic")
+
+COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
+                                    "RNA processing and modification", 
+                                    "Transcription", 
+                                    "Replication, recombination and repair", 
+                                    "Chromatin structure and dynamics", 
+                                    "Cell cycle control, cell division, chromosome partitioning", 
+                                    "Nuclear structure", 
+                                    "Defense mechanisms", 
+                                    "Signal transduction mechanisms", 
+                                    "Cell wall/membrane/envelope biogenesis", 
+                                    "Cell motility",
+                                    "Cytoskeleton", 
+                                    "Extracellular structures", 
+                                    "Intracellular trafficking, secretion, and vesicular transport", 
+                                    "Post-translational modification, protein turnover, chaperones", 
+                                    "Mobilome: prophages, transposons", 
+                                    "Energy production and conversion", 
+                                    "Carbohydrate transport and metabolism", 
+                                    "Amino acid transport and metabolism", 
+                                    "Nucleotide transport and metabolism", 
+                                    "Coenzyme transport and metabolism", 
+                                    "Lipid transport and metabolism", 
+                                    "Inorganic ion transport and metabolism", 
+                                    "Secondary metabolites biosynthesis, transport and catabolism", 
+                                    "General function prediction only", 
+                                    "Function unknown", 
+                                    "Proteins not assigned to any COG")
+
+# Create the second plot (Figure 2B)
+p3B <- ggplot(means_ag, aes(fill=AntigenicityResult, 
+                            y=mean_value, 
+                            x=fct_rev(factor(COG_category_description, 
+                                             levels=COG_category_description_order))
+)) + 
+  geom_bar(position="stack", stat="identity") + 
+  scale_fill_manual(values =c("olivedrab","#9e2f28")) +
+  theme(axis.title = element_markdown(face="bold"), 
+        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        title = element_text(family = "Times New Roman"), 
+        legend.position= "none",
+        legend.title = element_blank(),
+        text = element_text(family = "Times New Roman", size = 14), 
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                        linewidth = 0.3)) + 
+  labs(y = "Mean % of Non Homologous<br>to Host Proteins in *Av.<br>paragallinarum* Strains", 
        x = "COG category",
-       tag = "B")
+       tag = "B") +
+  coord_flip() + 
+  ylim(0, 25)
 
 p3B
 
@@ -169,40 +185,145 @@ AgProt <- Antigenics %>%
 Antigenics <- Antigenics %>%
   filter(Strain != "Experimental Antigens")
 
-p3A <- ggplot(Antigenics, aes(x = Group, y = Ag_Percent)) +
-  geom_violin(width = 1.4, aes(fill = Group)) +
-  scale_fill_manual(values = "olivedrab") +
-  geom_point(aes(y = AgProt, color = "Experimental Antigens"), size = 5, shape = 18) +  
-  scale_color_manual(values = c("Experimental Antigens" = "#0073C2FF")) +  
-  theme(
-    text = element_text(family = "Times New Roman", size = 16, color = "black"), 
-    axis.text = element_text(family = "Times New Roman", size = 16, color = "black"),
-    legend.position = "inside",
-    legend.position.inside = c(0.5, 0),
-    legend.box = "vertical",
-    legend.direction = "vertical",
-    legend.text = element_markdown(),
-    legend.title = element_blank(),
-    axis.text.x = element_blank(),
-    panel.background = element_rect(fill = "white"), 
-    panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
-                                    linewidth = 0.3)
-  ) + 
-  labs(
-    y = "Percentage of Antigenic Proteins (Non-Homologous to Host)",
-    tag = "A",
-    x = ""
-  ) + 
-  ylim(0, 83)
+p3A <- ggbetweenstats(
+  data = Antigenics,
+  x = Group,
+  y = Ag_Percent,
+  centrality.label.args = list(color = "transparent", size=0, box.padding=200),  
+  centrality.point.args = list(color = "#25482f", size = 6),
+  point.args = list(
+    position = ggplot2::position_jitterdodge(dodge.width = 0.6),
+    alpha = 0.7, 
+    size = 3, 
+    stroke = 0
+  ),
+  ggplot.component = list(
+    scale_color_manual(values = c(
+      "*Av. paragallinarum* strains" = "olivedrab", 
+      "Experimental Antigens" = "#0073C2FF"
+    )),
+    theme(
+      axis.text = ggtext::element_markdown(
+        family = "Times New Roman", size = 14, color = "black",
+        fill = "white", box.colour = "white", linetype = "solid",
+        linewidth = 1, halign = 0.5, valign = 0.5, 
+        padding = margin(2, 4, 2, 4), r = unit(5, "pt"),
+        align_widths = TRUE, align_heights = TRUE, 
+        rotate_margins = TRUE
+      ),
+      axis.title = ggtext::element_markdown(family = "Times New Roman",size = 14),
+      legend.text = ggtext::element_markdown(family = "Times New Roman",size = 11),
+      legend.title = element_blank(),
+      axis.text.x = element_blank(),
+      panel.background = element_rect(fill = "white"), 
+      panel.grid.major = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3),
+      panel.grid.minor = element_blank(),
+      legend.position = "bottom",
+      legend.box = "vertical",
+      legend.direction = "vertical"
+    ),
+    labs(
+      y = "Percentage of Antigenic Proteins<br>(Non-Homologous to Host)",
+      tag = "A",
+      x = ""
+    )
+  )
+) + 
+  geom_point(aes(y = AgProt, color = "Experimental Antigens"), size = 5, shape = 18)
+
 
 p3A
 
+means_ag <- Ag_COG_AgProt %>%
+  group_by(COG_category_description, AntigenicityResult) %>%
+  summarize(mean_value = mean(Ag_Percentage))
+
+means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_description,
+                                                     "_",
+                                                     " ")
+
+means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_description,
+                                                     "-",
+                                                     "Proteins not assigned to any COG")
+
+means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_description,
+                                                     "Posttranslational",
+                                                     "Post-translational")
+
+means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
+                                               "NON-ANTIGEN",
+                                               "Non antigenic")
+means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
+                                               "ANTIGEN",
+                                               "Antigenic")
+
+COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
+                                    "RNA processing and modification", 
+                                    "Transcription", 
+                                    "Replication, recombination and repair", 
+                                    "Chromatin structure and dynamics", 
+                                    "Cell cycle control, cell division, chromosome partitioning", 
+                                    "Nuclear structure", 
+                                    "Defense mechanisms", 
+                                    "Signal transduction mechanisms", 
+                                    "Cell wall/membrane/envelope biogenesis", 
+                                    "Cell motility",
+                                    "Cytoskeleton", 
+                                    "Extracellular structures", 
+                                    "Intracellular trafficking, secretion, and vesicular transport", 
+                                    "Post-translational modification, protein turnover, chaperones", 
+                                    "Mobilome: prophages, transposons", 
+                                    "Energy production and conversion", 
+                                    "Carbohydrate transport and metabolism", 
+                                    "Amino acid transport and metabolism", 
+                                    "Nucleotide transport and metabolism", 
+                                    "Coenzyme transport and metabolism", 
+                                    "Lipid transport and metabolism", 
+                                    "Inorganic ion transport and metabolism", 
+                                    "Secondary metabolites biosynthesis, transport and catabolism", 
+                                    "General function prediction only", 
+                                    "Function unknown", 
+                                    "Proteins not assigned to any COG")
+
+# Create the second plot (Figure 2B)
+p3C <- ggplot(means_ag, aes(fill=AntigenicityResult, 
+                            y=mean_value, 
+                            x=fct_rev(factor(COG_category_description, 
+                                             levels=COG_category_description_order))
+))  + 
+  geom_bar(position="stack", stat="identity") + 
+  scale_fill_manual(values =c("olivedrab","#9e2f28")) +
+  theme(axis.title.x = element_markdown(face="bold"), 
+        axis.title.y = element_blank(),
+        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        axis.text.y = element_blank(),
+        title = element_text(family = "Times New Roman"), 
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "bottom",
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = ggtext::element_markdown(family = "Times New Roman"),
+        text = element_text(family = "Times New Roman", size = 14), 
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                        linewidth = 0.3)) + 
+  labs(y = "Mean % of Non<br>Homologous to Host<br>Experimental Antigens", 
+       x = "COG category",
+       tag = "C") +
+  coord_flip() + 
+  ylim(0, 25)
+p3C
 
 layout <- '
-ABBBB
+AAABBBBCCCC
+AAABBBBCCCC
+AAABBBBCCCC
+AAABBBBCCCC
+DDDBBBBCCCC
 '
-wrap_plots(A = p3A, B = p3B, design = layout)
+wrap_plots(A = p3A, B = p3B, C= p3C, D = guide_area(), design = layout)  +
+  plot_layout(guides = 'collect')
 
-# Save the combined plot as a PNG file
 ggsave("3A&B.png", device = "png", path = output_path, 
        width =3500, height = 2000, units="px")

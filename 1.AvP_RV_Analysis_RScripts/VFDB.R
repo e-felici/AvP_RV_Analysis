@@ -12,12 +12,15 @@ library("magrittr")
 
 # Get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
-if (length(args) != 2) {
-  stop("Two arguments are required!")
+if (length(args) != 4) {
+  stop("Four arguments are required!")
 }
 
 MAIN <- args[1]
 subdir <- args[2]
+DBDir <- args[3]
+VF_cat <- args[4]
+
 cat("Filtering, cleaning, and sorting VFDB results\n")
 
 tryCatch({
@@ -26,6 +29,35 @@ tryCatch({
   raw <- read_tsv(paste0(MAIN, "/", subdir, "/VFDB_full_results/", subdir, "-vs_VFDB.out"), col_names = 1:12)
       #Protein IDs
   ids <- read_tsv(paste0(MAIN, "/", subdir, "/AllProteinIds-",subdir,".txt"), col_names = "ID")
+
+  vf_cat <- read_tsv(VF_cat)
+    
+  vfdb <- read_lines(paste0(DBDir, "/VFDB_full/VFDB_setB_pro.faa"))
+  
+  keep <- grep("^>", vfdb)
+  
+  vfdb <- vfdb[keep]
+  
+  # Extract up to 3 matches per line
+  vf_matches <- str_match_all(vfdb, "\\(?VF\\w+")
+  
+  # Pad each match to length 3 (with NA if fewer found)
+  vf_matrix <- t(sapply(vf_matches, function(x) { length(x) <- 3; x }))
+  
+  # Build tibble
+  vfdb <- as_tibble(vf_matrix, .name_repair = "minimal") %>%
+    setNames(paste0("col", 1:3))
+  
+  rm(vf_matches)
+  rm(vf_matrix)
+  
+  vfdb <- vfdb %>%
+    mutate(across(everything(), ~ str_replace_all(., "\\(", "")))
+  
+  colnames(vfdb) <- c("VF_ID", "delete", "VFCID")
+  
+  vfdb <- select(vfdb, -delete)
+  
   
   # Define the criteria for filtering the results
   index = ifelse(((raw$X11 < 1e-5) + (raw$X12>50) + (raw$X3 > 25)) == 3, TRUE, FALSE)
@@ -60,6 +92,17 @@ tryCatch({
                                       "Non Virulence Factor",
                                       "Probable Virulence Factor")
   
+  AllResults$VF_ID <- str_replace(AllResults$Virulence.Homologue, "\\(.*", "")
+  
+  AllResults <- left_join(AllResults, vfdb, by="VF_ID")
+  
+  AllResults <- left_join(AllResults, vf_cat, by = "VFCID")
+  
+  AllResults <-  AllResults %>%
+    mutate(across(everything(), ~replace_na(., "-")))
+  
+  AllResults <- arrange(AllResults, ID, Virulence.Bitscore) %>%
+    distinct(ID, .keep_all = TRUE)
   
   # Write the final results to a TSV file
   write_tsv(AllResults, paste0(MAIN, "/", subdir, "/Final_results/", subdir, "-vs_VFDB_final.tsv"))

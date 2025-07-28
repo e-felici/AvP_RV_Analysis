@@ -18,10 +18,11 @@ Results$Strain <- str_replace_all(Results$Strain,
 Strain_number <- group_by(Results, Strain) %>% 
   summarise("Total_Number_of_proteins_per_Strain"=n()) 
 
-# Select relevant columns and group by Strain and COG_category_u, then summarize
 COG <- Results %>%
-  select(ID, COG_category_u, Strain) %>%
-  group_by(Strain, COG_category_u) %>%
+  filter(Host_Homologue_Result_All == "Non Host Homologue",
+         AntigenicityResult == "ANTIGEN") %>%
+  select(ID, COG_category_description, Strain) %>%
+  group_by(Strain, COG_category_description) %>%
   summarise(Total_Number_of_proteins_COG = n()) %>%
   full_join(Strain_number, by = "Strain")
 
@@ -47,7 +48,7 @@ Mean_Percentage_Exp_Total <- Exp_Total %>%
 Exposed <- filter(Results, AntigenicityResult ==  "ANTIGEN" & 
                    Host_Homologue_Result_All ==  "Non Host Homologue")
 
-SL_COG <- group_by(Exposed, SubcellularLocalization, Strain, COG_category_u) %>%
+SL_COG <- group_by(Exposed, SubcellularLocalization, Strain, COG_category_description) %>%
   summarise(Exposed_or_Not_proteins_COG=n())
 
 #agrupo
@@ -91,81 +92,111 @@ Mean_Percentage_Exposed <- Exposed %>%
 
 Mean_Percentage_Exposed <- sum(Mean_Percentage_Exposed$mean_percentage)
 
-p4C <- ggplot(Exposed, aes(
-  fill= factor(SubcellularLocalization, 
-               levels=c( "Cellwall", "Cytoplasmic",  "Unknown",
-                         "CytoplasmicMembrane","Periplasmic", "Extracellular", "OuterMembrane")), 
-  y=Percentage_Exposed_or_Not, 
-  x=Strain)) + 
-  geom_bar(position="stack", 
-           stat="identity",
-           show.legend = FALSE) +
-  scale_fill_manual(values =c("sienna2", "#9e2f28","#e1ccd1", "#deb867","#4f2f4a", "olivedrab", "#25482f"),
-                    labels=c("Cell Wall", "Cytoplasmic", "Unknown Localization", 
-                             "Cytoplasmic Membrane","Periplasmic Space", "Extracellular Space", "Outer Membrane")
-  ) +
-  theme(axis.title = element_text(family = "Times New Roman", size=18, color = "black"), 
-        text = element_text(family = "Times New Roman", size = 16, color = "black"),
-        axis.text = element_text(family = "Times New Roman", size = 11, color = "black"),title = element_text(family = "Times New Roman"),
-        legend.title=element_blank(), 
-        panel.background =  element_rect(fill = "white"), 
-        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
-                                        linewidth = 0.3)) +
-  coord_flip() + 
-  labs(y = "Percentage of proteins",
-       tag = "4A")  +
-  geom_hline(yintercept = Mean_Percentage_Exposed, color = "blue")
-
-p4C
-
 #Agrego el total de cada grupo
-SL_COG = full_join(SL_COG, COG, by=c("Strain", "COG_category_u"))
+SL_COG = full_join(SL_COG, Exposed, by=c("Strain", "SubcellularLocalization"))
+
+SL_COG <- SL_COG %>% select(SubcellularLocalization, Strain, COG_category_description,
+                            Exposed_or_Not_proteins_COG, Total_Ag_proteins)
 
 #agrego columna porcentaje
+SL_COG_Ag <- SL_COG %>% 
+  mutate(Exposed_Percentage = Exposed_or_Not_proteins_COG *100 / Total_Ag_proteins) %>% 
+  filter(substr(Strain, 1, 3) == "Exp")
+
 SL_COG <- SL_COG %>% 
-  mutate(Exposed_Percentage = Exposed_or_Not_proteins_COG *100 / Total_Number_of_proteins_per_Strain) %>% 
+  mutate(Exposed_Percentage = Exposed_or_Not_proteins_COG *100 / Total_Ag_proteins) %>% 
   filter(substr(Strain, 1, 3) != "Exp")
 
 
 means_SL <- SL_COG %>%
-  group_by(COG_category_u,SubcellularLocalization) %>%
+  group_by(COG_category_description, SubcellularLocalization) %>%
   summarize(mean_value = mean(Exposed_Percentage)) %>%
   na.omit(means_SL)
 
-means_SL <- bind_rows(means_SL, tibble(COG_category_u = "-", 
+means_SL <- bind_rows(means_SL, tibble(COG_category_description = "-", 
                                        SubcellularLocalization = "Cell Wall",
                                        mean_value = 0))
 
+means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_description,
+                                                     "_",
+                                                     " ")
+
+means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_description,
+                                                     "-",
+                                                     "Proteins not assigned to any COG")
+
+means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_description,
+                                                     "Posttranslational",
+                                                     "Post-translational")
+
+means_SL$SubcellularLocalization <- str_replace_all(means_SL$SubcellularLocalization,
+                                                     "CytoplasmicMembrane",
+                                                     "Cytoplasmic Membrane")
+
+means_SL$SubcellularLocalization <- str_replace_all(means_SL$SubcellularLocalization,
+                                                    "OuterMembrane",
+                                                    "Outer Membrane")
+
+COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
+                                    "RNA processing and modification", 
+                                    "Transcription", 
+                                    "Replication, recombination and repair", 
+                                    "Chromatin structure and dynamics", 
+                                    "Cell cycle control, cell division, chromosome partitioning", 
+                                    "Nuclear structure", 
+                                    "Defense mechanisms", 
+                                    "Signal transduction mechanisms", 
+                                    "Cell wall/membrane/envelope biogenesis", 
+                                    "Cell motility",
+                                    "Cytoskeleton", 
+                                    "Extracellular structures", 
+                                    "Intracellular trafficking, secretion, and vesicular transport", 
+                                    "Post-translational modification, protein turnover, chaperones", 
+                                    "Mobilome: prophages, transposons", 
+                                    "Energy production and conversion", 
+                                    "Carbohydrate transport and metabolism", 
+                                    "Amino acid transport and metabolism", 
+                                    "Nucleotide transport and metabolism", 
+                                    "Coenzyme transport and metabolism", 
+                                    "Lipid transport and metabolism", 
+                                    "Inorganic ion transport and metabolism", 
+                                    "Secondary metabolites biosynthesis, transport and catabolism", 
+                                    "General function prediction only", 
+                                    "Function unknown", 
+                                    "Proteins not assigned to any COG")
+
+#remove NAs, since no protein fit into Cell Wall category
+means_SL <- filter(means_SL, !is.na(COG_category_description))
+
+means_SL$SubcellularLocalization <- as.factor(means_SL$SubcellularLocalization)
 
 p4B <- ggplot(means_SL, aes(fill=factor(SubcellularLocalization, 
-                                       levels=c("Cell Wall","Unknown",
-                                                "Cytoplasmic", "OuterMembrane",
-                                                "CytoplasmicMembrane","Periplasmic",
-                                                "Extracellular")), 
-                           y=mean_value, x=COG_category_u)) + 
+                                       levels=c("Unknown", "Cytoplasmic", "Cytoplasmic Membrane", 
+                                                "Periplasmic","Outer Membrane",
+                                                "Extracellular","Cell Wall")), 
+                           y=mean_value, x=fct_rev(factor(COG_category_description, 
+                                                          levels=COG_category_description_order)))) + 
   geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values =c("sienna2", "#e1ccd1","#9e2f28","#25482f",
-                              "#deb867","#4f2f4a","olivedrab"),
-                    labels=c("Cell Wall",'Unknown Localization', 'Cytoplasm', 
-                             'Outer Membrane', 'Citoplasmic Membrane', 
-                             'Periplasmic Space', 'Extracellular Space')) +
-  theme(axis.title = element_text(family = "Times New Roman", size = 16), 
-        axis.text = element_text(family = "Times New Roman", size = 16, color = "black"),
-        legend.title=element_blank(),
-        text = element_text(family = "Times New Roman", size = 16), 
-        legend.text = element_text(family = "Times New Roman", size = 16),
-        legend.position = "inside",
-        legend.position.inside = c(0.85, 0.8),
-        legend.box = "vertical",
-        legend.direction = "vertical",
-        legend.location = "plot",
-        legend.key.size = unit(0.5, 'cm'),
-        panel.background =  element_rect(fill = "white"), 
-        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
-                                        linewidth = 0.3)) + 
-  labs(y = "Mean Percentage of Proteins", 
-       x = "COG category",
-       tag = "B")
+  scale_fill_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
+                             "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
+  theme(axis.title = element_markdown(face="bold"), 
+                 axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+                 title = element_text(family = "Times New Roman"), 
+                 legend.position= "bottom",
+                 legend.location = "plot",
+                 legend.byrow = T,
+                 legend.title = element_blank(),
+                 text = element_text(family = "Times New Roman", size = 14), 
+                 panel.background =  element_rect(fill = "white"), 
+                 panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                                 linewidth = 0.3)) + 
+           labs(y = "Mean % of Non Homologous<br>to Host, Antigenic Proteins in *Av.<br>paragallinarum* Strains", 
+                x = "COG category",
+                tag = "B") +
+           coord_flip() + 
+  ylim(0, 40)
+         
+
 
 p4B
 
@@ -180,60 +211,156 @@ Exposed <- Exposed %>%
 Exposed <- Exposed %>%
   mutate(SubcellularLocalization = recode(SubcellularLocalization,
                                           "Cellwall" = "Cell Wall", 
-                                          "Cytoplasmic" = 'Cytoplasm',
-                                          "CytoplasmicMembrane" = 'Citoplasmic\nMembrane', 
-                                          "Extracellular" = 'Extracellular\nSpace',
+                                          "Cytoplasmic" = 'Cytoplasmic',
+                                          "CytoplasmicMembrane" = 'Cytoplasmic\nMembrane', 
+                                          "Extracellular" = 'Extracellular',
                                           "OuterMembrane" = 'Outer\nMembrane',
-                                          "Periplasmic" = 'Periplasmic\nSpace', 
-                                          "Unknown" = 'Unknown\nLocalization'))
+                                          "Periplasmic" = 'Periplasmic', 
+                                          "Unknown" = 'Unknown'))
+
+Exposed$SubcellularLocalization <- factor(Exposed$SubcellularLocalization, 
+                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nMembrane", 
+                                                   "Periplasmic","Outer\nMembrane",
+                                                   "Extracellular","Cell Wall"))
+
 AgProt <- Exposed %>%
   filter(Strain == "Experimental Antigens")
 
 Exposed <- Exposed %>%
   filter(Strain != "Experimental Antigens")
 
+
 p4A <- ggplot(Exposed, aes(x = SubcellularLocalization, y = SL_Percent)) +
   geom_violin(width = 1.4, aes(fill = SubcellularLocalization), alpha= 0.4) +
-  scale_fill_manual(values =c("#9e2f28","#deb867","olivedrab","#25482f",
-                              "#4f2f4a","#e1ccd1", "sienna2")) +
+  scale_fill_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
+                              "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
   geom_point(data=AgProt, aes(x=SubcellularLocalization, y=SL_Percent, 
                               color=SubcellularLocalization), 
              size = 7, shape = 18) +
-  scale_color_manual(values =c("sienna2","#9e2f28","#deb867",
-                               "olivedrab","#25482f",
-                               "#4f2f4a","#e1ccd1" )) +
+  scale_color_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
+                               "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
   theme(
-    text = element_text(family = "Times New Roman", size = 16, color = "black"), 
+    text = element_text(family = "Times New Roman", size = 14, color = "black"), 
     axis.title = element_markdown(),
     legend.position = "none",
     plot.caption = element_markdown(halign = 0, hjust = 0.95),
     legend.title = element_blank(),
-    axis.text.y = element_text(family = "Times New Roman", size = 16, color = "black"),
-    axis.text.x = element_text(family = "Times New Roman", size = 13, color = "black"),
+    axis.text.y = element_text(family = "Times New Roman", size = 14, color = "black"),
+    axis.title.y = element_text(family = "Times New Roman", size = 14, color = "black", face = "bold"),
+    axis.text.x = element_text(family = "Times New Roman", size = 14, color = "black",face = "bold"),
     panel.background = element_rect(fill = "white"), 
     panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                     linewidth = 0.3)
   ) + 
   labs(
-    y = "Percentage of Proteins in each subcellular<br>localization (Antigenic, Non-Homologous to Host)",
+    y = "Percentage of Non-Homologous to Host,<br>Antigenic Proteins in each Localization",
     tag = "A",
     x = "",
-    caption = "٥ *Av. paragallinarum* strains<br>◆ Experimental Antigens  "
+    caption = "Violin plots: *Av. paragallinarum* strains<br>◆: Experimental Antigens  "
   ) + 
   ylim(0, 60)
 
 p4A
 
+means_SL <- SL_COG_Ag %>%
+  group_by(COG_category_description, SubcellularLocalization) %>%
+  summarize(mean_value = mean(Exposed_Percentage)) %>%
+  na.omit(means_SL)
+
+means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_description,
+                                                     "_",
+                                                     " ")
+
+means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_description,
+                                                     "-",
+                                                     "Proteins not assigned to any COG")
+
+means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_description,
+                                                     "Posttranslational",
+                                                     "Post-translational")
+
+COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
+                                    "RNA processing and modification", 
+                                    "Transcription", 
+                                    "Replication, recombination and repair", 
+                                    "Chromatin structure and dynamics", 
+                                    "Cell cycle control, cell division, chromosome partitioning", 
+                                    "Nuclear structure", 
+                                    "Defense mechanisms", 
+                                    "Signal transduction mechanisms", 
+                                    "Cell wall/membrane/envelope biogenesis", 
+                                    "Cell motility",
+                                    "Cytoskeleton", 
+                                    "Extracellular structures", 
+                                    "Intracellular trafficking, secretion, and vesicular transport", 
+                                    "Post-translational modification, protein turnover, chaperones", 
+                                    "Mobilome: prophages, transposons", 
+                                    "Energy production and conversion", 
+                                    "Carbohydrate transport and metabolism", 
+                                    "Amino acid transport and metabolism", 
+                                    "Nucleotide transport and metabolism", 
+                                    "Coenzyme transport and metabolism", 
+                                    "Lipid transport and metabolism", 
+                                    "Inorganic ion transport and metabolism", 
+                                    "Secondary metabolites biosynthesis, transport and catabolism", 
+                                    "General function prediction only", 
+                                    "Function unknown", 
+                                    "Proteins not assigned to any COG")
+
+means_SL <- means_SL %>%
+  mutate(SubcellularLocalization = recode(SubcellularLocalization,
+                                          "Cellwall" = "Cell Wall", 
+                                          "Cytoplasmic" = 'Cytoplasmic',
+                                          "CytoplasmicMembrane" = 'Cytoplasmic\nMembrane', 
+                                          "Extracellular" = 'Extracellular',
+                                          "OuterMembrane" = 'Outer\nMembrane',
+                                          "Periplasmic" = 'Periplasmic', 
+                                          "Unknown" = 'Unknown'))
+
+means_SL$SubcellularLocalization <-  factor(means_SL$SubcellularLocalization, 
+                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nMembrane", 
+                                                   "Periplasmic","Outer\nMembrane",
+                                                   "Extracellular","Cell Wall"))
+
+p4C <- ggplot(means_SL, aes(fill=SubcellularLocalization,
+                            y=mean_value, x=fct_rev(factor(COG_category_description, 
+                                                           levels=COG_category_description_order)))) + 
+  geom_bar(position="stack", stat="identity") + 
+  scale_fill_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
+                              "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
+  theme(axis.title = element_markdown(face="bold"), 
+        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        title = element_text(family = "Times New Roman"), 
+        legend.position= "none",       
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        text = element_text(family = "Times New Roman", size = 14), 
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                        linewidth = 0.3)) + 
+  labs(y = "Mean % of Non Homologous<br>to Host, Antigenic<br>Experimental Antigens", 
+       x = "COG category",
+       tag = "C") +
+  coord_flip() + 
+  ylim(0, 40)
+
+p4C
+
 
 layout <- '
-AAA
-BBB
+AAAA
+AAAA
+AAAA
+AAAA
+BBCC
+BBCC
+BBCC
+BBCC
+DD##
 '
-wrap_plots(A = p4A, B = p4B, design = layout)
+wrap_plots(A = free(p4A), B = p4B, C= p4C, D = guide_area(), design = layout)  +
+  plot_layout(guides = 'collect')
 
-# Save the combined plot as a PNG file
-#ggsave("4A&B.png", device = "png", path = output_path, 
- #      width =3500, height = 2000, units="px")
-
-
-
+ggsave("4A&B.png", device = "png", path = output_path, 
+       width =2900, height = 3000, units="px")

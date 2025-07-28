@@ -45,31 +45,33 @@ Candidates <- Candidates %>%
   filter(n() >= num_subfolders) %>%
   ungroup()
 
+summary(as.factor(Candidates$Cluster_Number))
+
+#Manually check which proteins appeared 
+
+#Append names of the proteins
 cluster_mapping <- c("3841" = "Peptidoglycan-associated lipoprotein Pal", 
                      "3299" = "OmpH family outer membrane protein",
                      "2960" = "OmpW family outer membrane protein",
                      "1580" = "Porin OmpA",
                      "1579" = "Outer membrane beta-barrel protein",
                      "1528" = "Peptidoglycan DD-metalloendopeptidase family protein",
-                     "876" = "Outer membrane protein transport protein",
-                     "864" = "TolC family protein",
-                     "522" = "BamA/TamA family outer membrane protein", 
-                     "267" = "TonB-dependent hemoglobin/transferrin/lactoferrin family receptor",
-                     "209" = "Outer membrane protein assembly factor BamA",
-                     "191" = "TonB-dependent receptor plug domain-containing protein")
+                     "876"  = "Outer membrane protein transport protein",
+                     "864"  = "TolC family protein",
+                     "522"  = "BamA/TamA family outer membrane protein", 
+                     "267"  = "TonB-dependent hemoglobin/transferrin/lactoferrin family receptor",
+                     "209"  = "Outer membrane protein assembly factor BamA",
+                     "191"  = "TonB-dependent receptor plug domain-containing protein",
+                     "49"   = "Filamentous hemagglutinin N-terminal domain-containing protein")
 
 # Replace the values in Cluster_Number with letters
 Candidates <- Candidates %>%
   mutate(Protein = recode(Cluster_Number, !!!cluster_mapping))
 
 Candidates <- Candidates %>%
-  mutate(VF_or_Adhe = ifelse(VirulenceFactor == "Probable Virulence Factor",
-                             ifelse(AdhesinProbability2 == "Adhesin",
-                                    "Virulence Factor (Probable Adhesin)",
-                                    "Virulence Factor"),
-                             "Non Virulence Factor")
-         )
-
+              mutate(VFcategory= ifelse(VFcategory=="-",
+                                        "Non-Virulence Factor",
+                                        VFcategory))
 
 write_tsv(Candidates, paste0(output_path,"/Antigen_Candidates.tsv"))
 
@@ -95,7 +97,13 @@ temp_type <- Candidates %>%
 
 temp_vf <- Candidates %>%
   group_by(Protein) %>%
-  count(VF_or_Adhe) %>%
+  count(VFcategory) %>%
+  slice_max(n, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+temp_Adhe <- Candidates %>%
+  group_by(Protein) %>%
+  count(AdhesinProbability2) %>%
   slice_max(n, n = 1, with_ties = FALSE) %>%
   ungroup()
 
@@ -117,8 +125,9 @@ temp_c <- inner_join(temp_vf, temp_cog, by = "Protein")
 
 temp_d <- inner_join(temp_a, temp_b, by = "Protein")
 temp_e <- inner_join(temp_c, temp_Conserv1, by = "Protein")
+temp_f<- inner_join(temp_e, temp_Adhe, by = "Protein")
 
-All <- inner_join(temp_e, temp_d, by = "Protein")
+All <- inner_join(temp_f, temp_d, by = "Protein")
 
 rm(list = ls(pattern = '^temp_'))
 
@@ -128,32 +137,53 @@ All <- All %>%
   mutate(MW = round(MW/1000, digits = 2), 
          Isoelectric_Point = round(Isoelectric_Point, digits = 2))
 
-COG_mapping <- c("Cell_wall/membrane/envelope_biogenesis"= "~/Desktop/Graficos/membrane.png",
-"Inorganic_ion_transport_and_metabolism"= "~/Desktop/Graficos/plus-minus.png",
-"Intracellular_trafficking,_secretion,_and_vesicular_transport"= "~/Desktop/Graficos/vesicle2.png",
-"Lipid_transport_and_metabolism" = "~/Desktop/Graficos/lipid.png",
-"-" =  "~/Desktop/Graficos/-.png")
+COG_mapping <- c("Cell_wall/membrane/envelope_biogenesis"= "~/Desktop/Graficos/Images/membrane.png",
+"Inorganic_ion_transport_and_metabolism"= "~/Desktop/Graficos/Images/ions.png",
+"Intracellular_trafficking,_secretion,_and_vesicular_transport"= "~/Desktop/Graficos/Images/vesicles2.png",
+"Lipid_transport_and_metabolism" = "~/Desktop/Graficos/Images/lipid2.png",
+"-" =  "~/Desktop/Graficos/Images/unknown.png",
+"Cell_cycle_control,_cell_division,_chromosome_partitioning" = "~/Desktop/Graficos/Images/division.png")
 
 All <- All %>%
   mutate(COG_category_description2 = recode(COG_category_description, !!!COG_mapping))
 
-VF_mapping <- c("Virulence Factor" = "~/Desktop/Graficos/VF.png",
-                "Non Virulence Factor" =  "~/Desktop/Graficos/NonVF.png")
+All$COG_category_description <- str_replace_all(All$COG_category_description,
+                                                       "_",
+                                                       " ")
+
+All$COG_category_description <- str_replace_all(All$COG_category_description,
+                                                       "-",
+                                                       "Proteins not assigned to any COG")
+
+All$COG_category_description <- str_replace_all(All$COG_category_description,
+                                                       "Posttranslational",
+                                                       "Post-translational")
+
+
+VF_mapping <- c("Nutritional/Metabolic factor" = "~/Desktop/Graficos/Images/metabolic.png",
+                "Invasion" = "~/Desktop/Graficos/Images/invasion.png",
+                "Adherence" = "~/Desktop/Graficos/Images/adhe2.png",
+                "Non-Virulence Factor" =  "~/Desktop/Graficos/Images/NOvf.png")
 
 All <- All %>%
-  mutate(VF_or_Adhe2 = recode(VF_or_Adhe, !!!VF_mapping))
+  mutate(VFcategory2 = recode(VFcategory, !!!VF_mapping))
 
 
-Type_mapping <- c("Beta Barrel" = "~/Desktop/Graficos/beta.png",
-                  "Secreted" = "~/Desktop/Graficos/glob.png",
-                  "Lipoprotein" = "~/Desktop/Graficos/lipo.png")
+Type_mapping <- c("Beta Barrel" = "~/Desktop/Graficos/Images/beta2.png",
+                  "Secreted" = "~/Desktop/Graficos/Images/glob2.png",
+                  "Lipoprotein" = "~/Desktop/Graficos/Images/lipo3.png")
 All <- All %>%
   mutate(Type_of_Protein = recode(Type_of_Protein2, !!!Type_mapping))
 
-Essen_mapping <- c("Essential" = "~/Desktop/Graficos/esencial.png",
-                  "Non Essential" = "~/Desktop/Graficos/nonesen.png")
+Essen_mapping <- c("Essential" = "~/Desktop/Graficos/Images/essential2.png",
+                  "Non Essential" = "~/Desktop/Graficos/Images/NONessential2.png")
 All <- All %>%
   mutate(EssentialProtein2 = recode(EssentialProtein, !!!Essen_mapping))
+
+Adhe_mapping <- c("Adhesin" = "~/Desktop/Graficos/Images/adhe2.png",
+                   "Non-Adhesin" = "~/Desktop/Graficos/Images/NONadhe2.png")
+All <- All %>%
+  mutate(AdhesinProbability = recode(AdhesinProbability2, !!!Adhe_mapping))
 
 All <- All  %>%
   mutate(category = rep(c(0, 1), length.out = n()))
@@ -162,7 +192,7 @@ a <- ifelse(All$category == 0, "black", "grey35")
 
 p0 <- ggplot(All, aes(x = Protein)) + 
   geom_point(aes(y = 50, fill = COG_category_description), color ="white", size = 5) +
-  geom_image(aes(image = COG_category_description2), y = 50, size = 0.8) +  theme(
+  geom_image(aes(image = COG_category_description2), y = 50, size = 1) +  theme(
     axis.title = element_text(family = "Times New Roman", size = 12, color = "black"), 
     text = element_text(family = "Times New Roman", size = 12, color = "black"),
     axis.text.x = element_blank(),
@@ -176,7 +206,7 @@ p0 <- ggplot(All, aes(x = Protein)) +
     legend.title = element_blank(),
     panel.background = element_rect(fill = "white"), 
     panel.grid.major.y = element_line(colour = "white"),
-    panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+    panel.grid.major.x = element_line(colour = "white")
   ) + 
   labs(y = "", x = "", tag = "A") +
   scale_x_discrete(labels = scales::label_wrap(25))
@@ -188,7 +218,7 @@ ggsave("7_lab.png", device = "png", path = output_path,
 
 p1 <- ggplot(All, aes(x = Protein)) + 
   geom_point(aes(y = 50, fill = Type_of_Protein2), size = 5) +
-  geom_image(aes(image = Type_of_Protein), y = 50, size = 0.95) +  theme(
+  geom_image(aes(image = Type_of_Protein), y = 50, size = 1) +  theme(
     axis.title = element_text(family = "Times New Roman", size = 12, color = "black"), 
     text = element_text(family = "Times New Roman", size = 12, color = "black"),
     axis.text.x = element_blank(),
@@ -202,12 +232,14 @@ p1 <- ggplot(All, aes(x = Protein)) +
     legend.title = element_blank(),
     panel.background = element_rect(fill = "white"), 
     panel.grid.major.y = element_line(colour = "white"),
-    panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+    panel.grid.major.x = element_line(colour = "white")
   ) + 
   labs(y = "", x = "", tag = "B") +
   scale_x_discrete(labels = scales::label_wrap(25))
 
 p1
+ggsave("7_lab2.png", device = "png", path = output_path, 
+       width =3300, height = 2600, units="px")
 
 p2 <- ggplot(All, aes(x = Protein, y = 50)) + 
   geom_point(aes(size = MW, fill = MW), alpha = 1, shape = 21) +
@@ -235,7 +267,7 @@ p2 <- ggplot(All, aes(x = Protein, y = 50)) +
         text = element_text(family = "Times New Roman", size = 12), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major.y = element_line(colour = "white"),
-        panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+        panel.grid.major.x = element_line(colour = "white")
   ) + 
   labs(y = "", x = "", tag = "C") +
   scale_x_discrete(labels = scales::label_wrap(25))
@@ -269,7 +301,7 @@ p3 <- ggplot(All, aes(x = Protein, y = 50)) +
         text = element_text(family = "Times New Roman", size = 12), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major.y = element_line(colour = "white"),
-        panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+        panel.grid.major.x = element_line(colour = "white")
   ) + 
   labs(y = "", x = "", tag = "D") +
   scale_x_discrete(labels = scales::label_wrap(25))
@@ -277,8 +309,8 @@ p3 <- ggplot(All, aes(x = Protein, y = 50)) +
 p3
 
 p4 <- ggplot(All, aes(x = Protein)) + 
-  geom_point(aes(y = 50, fill = VF_or_Adhe), size = 5) +
-  geom_image(aes(image = VF_or_Adhe2), y = 50, size = 0.9) +  theme(
+  geom_point(aes(y = 50, fill = VFcategory), size = 5) +
+  geom_image(aes(image = VFcategory2), y = 50, size = 0.9) +  theme(
     axis.title = element_text(family = "Times New Roman", size = 12, color = "black"), 
     text = element_text(family = "Times New Roman", size = 12, color = "black"),
     axis.text.x = element_blank(),
@@ -292,7 +324,7 @@ p4 <- ggplot(All, aes(x = Protein)) +
     legend.title = element_blank(),
     panel.background = element_rect(fill = "white"), 
     panel.grid.major.y = element_line(colour = "white"),
-    panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
+    panel.grid.major.x = element_line(colour = "white")
       ) + 
   labs(y = "", x = "", tag = "E") +
   scale_x_discrete(labels = scales::label_wrap(25))
@@ -300,8 +332,31 @@ p4 <- ggplot(All, aes(x = Protein)) +
 p4
 
 p5 <- ggplot(All, aes(x = Protein)) + 
+  geom_point(aes(y = 50, fill = AdhesinProbability2), size = 5) +
+  geom_image(aes(image = AdhesinProbability), y = 50, size = 1) + 
+  theme(
+    axis.title = element_text(family = "Times New Roman", size = 12, color = "black"), 
+    text = element_text(family = "Times New Roman", size = 12, color = "black"),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(), 
+    legend.justification = c(0, 1), 
+    legend.position="right", 
+    legend.key.size =unit(1, 'cm'),
+    legend.text = element_text(family = "Times New Roman", size = 11, color = "black"),
+    legend.title = element_blank(),
+    panel.background = element_rect(fill = "white"), 
+    panel.grid.major.y = element_line(colour = "white"),
+    panel.grid.major.x = element_line(colour = "white")
+  ) + 
+  labs(y = "", x = "", tag = "F") +
+  scale_x_discrete(labels = scales::label_wrap(25))
+p5
+
+p6 <- ggplot(All, aes(x = Protein)) + 
   geom_point(aes(y = 50, fill = EssentialProtein), size = 5) +
-  geom_image(aes(image = EssentialProtein2), y = 50, size = 0.8) +  theme(
+  geom_image(aes(image = EssentialProtein2), y = 50, size = 1) +  theme(
     axis.title = element_text(family = "Times New Roman", size = 10, color = "black"), 
     text = element_text(family = "Times New Roman", size = 12, color = "black"),
     axis.text.x = element_text(family = "Times New Roman", angle = 90, 
@@ -316,19 +371,21 @@ p5 <- ggplot(All, aes(x = Protein)) +
     legend.title = element_blank(),
     panel.background = element_rect(fill = "white"), 
     panel.grid.major.y = element_line(colour = "white"),
-    panel.grid.major.x = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3)
-      ) + 
-  labs(y = "", x = "", tag = "F") +
+    panel.grid.major.x = element_line(colour = "white")
+  ) + 
+  labs(y = "", x = "", tag = "G") +
   scale_x_discrete(labels = scales::label_wrap(25))
 
-p5
 
-p0/ p1 / p2 / p3 / p4 / p5
+
+p6
+
+p0/ p1 / p2 / p3 / p4 / p5 / p6
 
 ggsave("7.png", device = "png", path = output_path, 
        width =3500, height = 2600, units="px")
 
-#Manually attached the keys for the legends
+#Manually attached the legends and keys for the legends
 
 
 

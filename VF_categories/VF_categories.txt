@@ -1,0 +1,16 @@
+VFCID	VFcategory
+VFC0282	Stress survival
+VFC0301	Regulation
+VFC0315	Post-translational modification
+VFC0346	Others
+VFC0272	Nutritional/Metabolic factor
+VFC0204	Motility
+VFC0083	Invasion
+VFC0258	Immune modulation
+VFC0235	Exotoxin
+VFC0251	Exoenzyme
+VFC0086	Effector delivery system
+VFC0271	Biofilm
+VFC0325	Antimicrobial activity/Competitive advantage
+VFC0001	Adherence
+

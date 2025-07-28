@@ -12,11 +12,13 @@ library("magrittr")
 
 # Get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)  # Capture arguments
-if (length(args) != 1) {
-  stop("Path to AgProtect argument is required")
+if (length(args) != 3) {
+  stop("Three arguments are required")
 }
 
 AgProtect <- args[1]
+DBDir <- args[2]
+VF_cat <- args[3]
 
 cat("Filtering, cleaning, and sorting VFDB results\n")
 
@@ -27,6 +29,34 @@ tryCatch({
       #Protein IDs
   ids <- read_tsv(paste0(AgProtect,"/AllProteinIds-AgProtect.txt"), col_names = "ID")
 
+  vf_cat <- read_tsv(VF_cat)
+  
+  vfdb <- read_lines(paste0(DBDir, "/VFDB_full/VFDB_setB_pro.faa"))
+  
+  keep <- grep("^>", vfdb)
+  
+  vfdb <- vfdb[keep]
+  
+  # Extract up to 3 matches per line
+  vf_matches <- str_match_all(vfdb, "\\(?VF\\w+")
+  
+  # Pad each match to length 3 (with NA if fewer found)
+  vf_matrix <- t(sapply(vf_matches, function(x) { length(x) <- 3; x }))
+  
+  # Build tibble
+  vfdb <- as_tibble(vf_matrix, .name_repair = "minimal") %>%
+    setNames(paste0("col", 1:3))
+  
+  rm(vf_matches)
+  rm(vf_matrix)
+  
+  vfdb <- vfdb %>%
+    mutate(across(everything(), ~ str_replace_all(., "\\(", "")))
+  
+  colnames(vfdb) <- c("VF_ID", "delete", "VFCID")
+  
+  vfdb <- select(vfdb, -delete)
+  
   # Define the criteria for filtering the results
   index = ifelse(((raw$X11 < 1e-5) + (raw$X12>50) + (raw$X3 > 25)) == 3, TRUE, FALSE)
   
@@ -57,7 +87,19 @@ tryCatch({
                                       "Non Virulence Factor",
                                       "Probable Virulence Factor")
   
-  # Write the final results to a TSV file
+  AllResults$VF_ID <- str_replace(AllResults$Virulence.Homologue, "\\(.*", "")
+  
+  AllResults <- left_join(AllResults, vfdb, by="VF_ID")
+  
+  AllResults <- left_join(AllResults, vf_cat, by = "VFCID")
+  
+  AllResults <-  AllResults %>%
+    mutate(across(everything(), ~replace_na(., "-")))
+  
+  AllResults <- arrange(AllResults, ID, Virulence.Bitscore) %>%
+    distinct(ID, .keep_all = TRUE)
+  
+    # Write the final results to a TSV file
   write_tsv(AllResults, paste0(AgProtect,"/Final_results/AgProtect-vs_VFDB_final.tsv"))
   rm(list = ls())
 }, 

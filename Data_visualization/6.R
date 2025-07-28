@@ -27,8 +27,7 @@ Exposed <- Exposed %>%
   summarise(Exposed_proteins = sum(Exposed_or_Not_proteins))
 
 Conserved <- Conserved %>%
-  filter(Conservation_Results %in% c("Conservation Score > 0.95, more than 90% of the strains",
-                                     "Conservation Score > 0.80, more than 90% of the strains")) %>%  
+  filter(Conservation_Results == "**Conserved sequence** (CS > 0.80) +<br>**prevalent** in > 90 % of the strains") %>%  
   group_by(Strain) %>%
   summarise(Conserved_proteins = sum(Conserved_or_Not_proteins))
 
@@ -40,10 +39,10 @@ rm(Antigenics,Exposed,Conserved,Host)
 
 All <- All %>%
   rename("Total\nProteins" = Total_Number_of_proteins_per_Strain, 
-         "Homology\nwith Host" = Host_Homologue_or_NonHH_Proteins, 
-         "Antigenicity" = Ag_or_NonAg_proteins,
-         "Subcellular\nLocalization" = Exposed_proteins,
-         "Conservation" = Conserved_proteins)
+         "No Homology\nwith Host" = Host_Homologue_or_NonHH_Proteins, 
+         "Antigenic" = Ag_or_NonAg_proteins,
+         "Exposed on\nCell Surface" = Exposed_proteins,
+         "Conserved and\nPrevalent" = Conserved_proteins)
 
 All <- All %>%
   bind_rows(
@@ -54,15 +53,16 @@ All <- All %>%
       mutate(Strain = "Mean")             
   )
 
-#fictitiously assume al experimental antigens are conserved
-All <- All %>%
-  mutate(Conservation = if_else(Strain == "Experimental Antigens", `Subcellular
-Localization`, 
-Conservation))
-
 All <- All %>% 
-  mutate(Percentage_retained = Conservation * 100 / `Homology\nwith Host`)
+  mutate(Percentage_retained = All$`Conserved and
+Prevalent` * 100 / All$`No Homology
+with Host`)
 
+All <- All %>%
+  mutate(Percentage_retained = if_else(Strain == "Experimental Antigens", `Exposed on
+Cell Surface` * 100 / `No Homology
+with Host`, 
+Percentage_retained))
 
 All_Ag <- All %>%
   filter(Strain=="Experimental Antigens")%>%
@@ -70,45 +70,48 @@ All_Ag <- All %>%
 
 All_mean <- All %>%
   filter(Strain=="Mean")%>%
-  mutate(Group= "Mean of Av. paragallinarum strains")
+  mutate(Group= "Mean of *Av. paragallinarum* strains")
 
 All_AvP <- All %>%
   filter(Strain!="Experimental Antigens") %>%
   filter(Strain!="Mean") %>%
-  mutate(Group= "Av. paragallinarum individual strains")
+  mutate(Group= "*Av. paragallinarum* individual strains")
 
-# Combine the two datasets into one
-All <- rbind(All_AvP, All_mean, All_Ag)
+All_AvP$Group <- as.factor(All_AvP$Group)
+All_mean$Group <- as.factor(All_mean$Group)
+All_Ag$Group <- as.factor(All_Ag$Group)
 
-rm(All_AvP, All_mean, All_Ag)
+All_AvP$alphaLevel <- 0.15
+All_Ag$alphaLevel <- 1
+All_mean$alphaLevel <-1
 
-All$Group <- as.factor(All$Group)
+#NA placeholder
+All_Ag <- All_Ag %>% mutate(`Conserved and
+Prevalent` = `Exposed on
+Cell Surface`)
 
-All$alphaLevel <- c("Av. paragallinarum individual strains" = 0.15,
-                       "Experimental Antigens" = 1, 
-                       "Mean of Av. paragallinarum strains" = 1)[All$Group]
+All <- full_join(All_AvP, All_Ag)
+All <- full_join(All, All_mean)
 
-grob <- grobTree(textGrob("*", x=0.89,  y=0.25, hjust=0,
-                          gp=gpar(col="orangered3", fontsize=18, fontface="bold")))
+rm(All_AvP, All_Ag, All_mean)
 
-All$labelss <- c("Av. paragallinarum individual strains" = "*Av. paragallinarum* individual strains",
-                    "Experimental Antigens" = "Experimental Antigens", 
-                    "Mean of Av. paragallinarum strains" = "Mean of *Av. paragallinarum* strains")[All$Group]
-
+grob <- grobTree(textGrob("*", x=0.70,  y=0.25, hjust=0,
+                          gp=gpar(col="#0073C2FF", fontsize=18, fontface="bold")))
 
 # Plot combined data using ggparcoord
 ggparcoord(All,
            columns = c(3,2,4,5,6),  
-           groupColumn = "labelss", 
+           groupColumn = "Group", 
            scale = "globalminmax",
            alphaLines = "alphaLevel",
            showPoints = TRUE,
            mapping = ggplot2::aes(linewidth = 1.5)
 ) +
   ggplot2::scale_linewidth_identity() +
-  scale_color_manual(values = c("olivedrab", "#0073C2FF","#25482f"))  +
-  theme(axis.text.x=element_text(colour="black"),
+  scale_color_manual(values = c("olivedrab","#0073C2FF", "orangered3"))  +
+  theme(axis.text.x=element_text(colour="black", face = "bold"),
         axis.text.y=element_text(colour="black"),
+        axis.title.y = element_text(face = "bold"),
         text = element_text(family = "Times New Roman", size = 16), 
         panel.background = element_rect(fill='transparent'),
         plot.background = element_rect(fill='transparent', color=NA),
@@ -122,9 +125,12 @@ ggparcoord(All,
         legend.title = element_blank()) + 
   labs(y = "Number of proteins",
        x = "") + 
+  ylim(0,2500) +
   annotation_custom(grob) +
   guides(alpha="none")
 
-ggsave("6.png", device = "png", path = output_path, 
-       width =4000, height = 2500, units="px", bg='transparent')
 
+ggsave("6.png", device = "png", path = output_path, 
+       width =2500, height = 2500, units="px", bg='transparent')
+
+###Note: manually fixed the experimental antigens column
