@@ -50,19 +50,19 @@ summary(as.factor(Candidates$Cluster_Number))
 #Manually check which proteins appeared 
 
 #Append names of the proteins
-cluster_mapping <- c("3841" = "Peptidoglycan-associated lipoprotein Pal", 
-                     "3299" = "OmpH family outer membrane protein",
-                     "2960" = "OmpW family outer membrane protein",
+cluster_mapping <- c("3841" = "Peptidoglycan-associated lipoprotein", 
+                     "3299" = "OmpH family OMP",
+                     "2960" = "OmpW family OMP",
                      "1580" = "Porin OmpA",
                      "1579" = "Outer membrane beta-barrel protein",
                      "1528" = "Peptidoglycan DD-metalloendopeptidase family protein",
-                     "876"  = "Outer membrane protein transport protein",
+                     "876"  = "OMP transport protein",
                      "864"  = "TolC family protein",
-                     "522"  = "BamA/TamA family outer membrane protein", 
-                     "267"  = "TonB-dependent hemoglobin/transferrin/lactoferrin family receptor",
-                     "209"  = "Outer membrane protein assembly factor BamA",
+                     "522"  = "BamA/TamA family OMP", 
+                     "267"  = "TonB-dependent hemoglobin/ transferrin/lactoferrin family receptor",
+                     "209"  = "OMP assembly factor BamA",
                      "191"  = "TonB-dependent receptor plug domain-containing protein",
-                     "49"   = "Filamentous hemagglutinin N-terminal domain-containing protein")
+                     "49"   = "Filamentous haemagglutinin N-terminal domain-containing protein")
 
 # Replace the values in Cluster_Number with letters
 Candidates <- Candidates %>%
@@ -180,7 +180,7 @@ Essen_mapping <- c("Essential" = "~/Desktop/Graficos/Images/essential2.png",
 All <- All %>%
   mutate(EssentialProtein2 = recode(EssentialProtein, !!!Essen_mapping))
 
-Adhe_mapping <- c("Adhesin" = "~/Desktop/Graficos/Images/adhe2.png",
+Adhe_mapping <- c("Adhesin" = "~/Desktop/Graficos/Images/adhesive.png",
                    "Non-Adhesin" = "~/Desktop/Graficos/Images/NONadhe2.png")
 All <- All %>%
   mutate(AdhesinProbability = recode(AdhesinProbability2, !!!Adhe_mapping))
@@ -189,6 +189,22 @@ All <- All  %>%
   mutate(category = rep(c(0, 1), length.out = n()))
 
 a <- ifelse(All$category == 0, "black", "grey35")
+
+Levelss <- c("BamA/TamA family OMP",
+             "Filamentous haemagglutinin N-terminal domain-containing protein",
+             "OmpH family OMP",
+             "OmpW family OMP",
+             "OMP assembly factor BamA",
+             "OMP transport protein",
+             "Peptidoglycan DD-metalloendopeptidase family protein",
+             "Peptidoglycan-associated lipoprotein",
+             "Porin OmpA",
+             "TolC family protein",
+             "TonB-dependent hemoglobin/ transferrin/lactoferrin family receptor",
+             "Outer membrane beta-barrel protein",
+             "TonB-dependent receptor plug domain-containing protein")
+
+All$Protein <- factor(All$Protein, levels = Levelss)
 
 p0 <- ggplot(All, aes(x = Protein)) + 
   geom_point(aes(y = 50, fill = COG_category_description), color ="white", size = 5) +
@@ -362,7 +378,7 @@ p6 <- ggplot(All, aes(x = Protein)) +
     axis.title = element_text(family = "Times New Roman", size = 10, color = "black"), 
     text = element_text(family = "Times New Roman", size = 12, color = "black"),
     axis.text.x = element_text(family = "Times New Roman", angle = 90, 
-                               size = 10, color = a, hjust = 1, vjust = 0.25),
+                               size = 13, color = a, hjust = 1, vjust = 0.25),
     axis.title.y = element_blank(), 
     axis.text.y = element_blank(), 
     axis.ticks.y = element_blank(),
@@ -382,12 +398,11 @@ p6 <- ggplot(All, aes(x = Protein)) +
 
 p6
 
-p0/ p1 / p2 / p3 / p4 / p5 / p6
+p0/ p1 / p2 / p3 / p4 / p5 / p6 
 
 ggsave("7.png", device = "png", path = output_path, 
-       width =3500, height = 2600, units="px")
+       width =4500, height = 3100, units="px")
 
 #Manually attached the legends and keys for the legends
-
 
 

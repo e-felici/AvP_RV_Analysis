@@ -134,3 +134,7 @@ ggsave("6.png", device = "png", path = output_path,
        width =2500, height = 2500, units="px", bg='transparent')
 
 ###Note: manually fixed the experimental antigens column
+
+retained <- All %>% 
+  filter(Strain != "Experimental Antigens" & Strain != "Mean" ) %>%
+  summarise(mean_percentage = round(mean(Percentage_retained), digits = 2)) 

@@ -19,6 +19,11 @@ Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental_Antigens",
                                   "Experimental Antigens")
 
+
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                  "Non Host Homologue",
+                                                  "Non-Host Homologue")
+
 # Find total number of proteins per strain
 Strain_number = group_by(Results, Strain) %>% 
   summarise("Total_Number_of_proteins_per_Strain"=n()) 
@@ -42,7 +47,7 @@ write_tsv(Host, paste0(output_path,"/Host.tsv"))
 
 # Calculate the mean percentage of non-host homologue proteins
 Mean_Percentage_Host <- Host %>%
-  filter(Host_Homologue_Result_All == "Non Host Homologue", 
+  filter(Host_Homologue_Result_All == "Non-Host Homologue", 
          Strain != "Experimental Antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Host), digits = 2)) %>%
   pull(mean_percentage)
@@ -102,6 +107,22 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
                                     "Function unknown", 
                                     "Proteins not assigned to any COG")
 
+all_levels <- c("Host Homologue", 
+                "Host Homologue or Non-Host Homologue, depending on the Host",
+                "Non-Host Homologue")
+
+means_Host_COG <- means_Host_COG %>%
+  bind_rows(tibble(
+    Host_Homologue_Result_All = "Host Homologue or Non-Host Homologue, depending on the Host",
+    mean_value = 0,
+    COG_category_description = "Proteins not assigned to any COG"
+  ))
+
+means_Host_COG <- means_Host_COG %>%
+  mutate(Host_Homologue_Result_All = factor(Host_Homologue_Result_All, 
+                                            levels = all_levels)
+         )
+
 # Create the second plot (Figure 2B)
 p2B <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All, 
                                   y=mean_value, 
@@ -109,11 +130,14 @@ p2B <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
                                                    levels=COG_category_description_order))
                                     )) + 
   geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values =c("#9e2f28","olivedrab")) +
+  scale_fill_manual(values =c("Host Homologue"="#9e2f28", 
+                              "Host Homologue or Non-Host Homologue, depending on the Host"="sienna2",
+                              "Non-Host Homologue"="olivedrab"),
+                    drop = FALSE) +
   theme(axis.title = element_markdown(face="bold"), 
         axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
         title = element_text(family = "Times New Roman"), 
-        legend.position= "none",
+        legend.position= "bottom",
   #      legend.justification = c("left", "bottom"),
  #       legend.box.just = "left",
 #        legend.margin = margin(6, 6, 6, 6),
@@ -132,7 +156,7 @@ p2B
 
 
 Host <- Host %>% 
-  filter(Host_Homologue_Result_All == "Non Host Homologue") %>%
+  filter(Host_Homologue_Result_All == "Non-Host Homologue") %>%
   mutate(
     HH_Percent = Host_Homologue_or_NonHH_Proteins * 100 / Total_Number_of_proteins_per_Strain,
     Group = ifelse(Strain == "Experimental Antigens",
@@ -182,11 +206,12 @@ p2A <- ggbetweenstats(
       legend.title = element_blank(),
       axis.text.x = element_blank(),
       panel.background = element_rect(fill = "white"), 
-      panel.grid.major = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3),
+      panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                      linewidth = 0.3),
       panel.grid.minor = element_blank()
     ),
     labs(
-      y = "Percentage of Proteins Non-Homologous to Host",
+      y = "Percentage of Non-Host Homologue Proteins",
       tag = "A",
       x = ""
     )
@@ -222,10 +247,6 @@ means_Host_COG$COG_category_description <- str_replace_all(means_Host_COG$COG_ca
                                                            "Posttranslational",
                                                            "Post-translational")
 
-means_Host_COG$Host_Homologue_Result_All <- str_replace_all(means_Host_COG$Host_Homologue_Result_All,
-                                                           "Host Homologue and Non Host Homologue, depending on the Host",
-                                                           "Host Homologue or Non Host\nHomologue, depending on the Host")
-
 COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
                                     "RNA processing and modification", 
                                     "Transcription", 
@@ -254,14 +275,25 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
                                     "Function unknown", 
                                     "Proteins not assigned to any COG")
 
-# Create the second plot (Figure 2B)
+means_Host_COG$Host_Homologue_Result_All <- str_replace_all(means_Host_COG$Host_Homologue_Result_All,
+                                                           "and",
+                                                           "or")
+
+means_Host_COG <- means_Host_COG %>%
+  mutate(Host_Homologue_Result_All = factor(Host_Homologue_Result_All, 
+                                            levels = all_levels)
+  )
+
 p2C <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All, 
                                   y=mean_value, 
                                   x=fct_rev(factor(COG_category_description, 
                                                    levels=COG_category_description_order))
 )) + 
   geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values =c("#9e2f28","sienna2", "olivedrab")) +
+  scale_fill_manual(values =c("Host Homologue"="#9e2f28", 
+                              "Host Homologue or Non-Host Homologue, depending on the Host"="sienna2",
+                              "Non-Host Homologue"="olivedrab"),
+                    drop = FALSE) +
   theme(axis.title.x = element_markdown(face="bold"), 
         axis.title.y = element_blank(),
         axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
@@ -286,17 +318,22 @@ p2C <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
 p2C
 
 layout <- '
-AAABBBBCCCC
-AAABBBBCCCC
-AAABBBBCCCC
-AAABBBBCCCC
-DDDBBBBCCCC
+AAABBBBBBBB
 '
-wrap_plots(A = p2A, B = p2B, C= p2C, D = guide_area(), design = layout)  +
-  plot_layout(guides = 'collect')
+
+patch <- p2A + plot_layout(guides = 'keep') 
+patch2 <- (p2B | p2C) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "bottom",
+        legend.direction = "vertical",
+        legend.title = element_blank())
+
+wrap_plots(A = patch, B = patch2, design = layout)
 
 # Save the combined plot as a PNG file
 ggsave("2A&B.png", device = "png", path = output_path, 
-       width =3500, height = 2000, units="px")
+       width =3700, height = 2200, units="px")
 
 

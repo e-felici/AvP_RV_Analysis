@@ -2,6 +2,7 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 library(ggtext)
+library(patchwork)
 
 #Define paths
 results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
@@ -146,8 +147,11 @@ means_Cons$Conservation_Results <- factor(means_Cons$Conservation_Results,
                                                      "Prevalent in > 90 % of the strains<br>but **sequence not conserved**",
                                                      "**Conserved sequence** (CS > 0.80) +<br>**prevalent** in > 90 % of the strains"))
 
+means_Cons$COG_category_description <- factor(means_Cons$COG_category_description,
+                                              levels = COG_category_description_order)
+
 p5B <- ggplot(means_Cons, aes( fill= Conservation_Results, 
-                               y = mean_value, x = COG_category_description)) + 
+                               y = mean_value, x = fct_rev(COG_category_description))) + 
   geom_bar(position="stack", stat="identity") + 
   scale_fill_manual(values=c("#4f2f4a","#deb867","#9e2f28","olivedrab")) +
   #scale_fill_viridis(discrete=T, begin = 0.3, end=0.65)  +
@@ -159,11 +163,12 @@ p5B <- ggplot(means_Cons, aes( fill= Conservation_Results,
         legend.byrow = T,
         legend.title = element_blank(),
         legend.text = element_markdown(),
+        axis.title.x.bottom = element_markdown(face="bold"), 
         text = element_text(family = "Times New Roman", size = 14), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of Non Homologous to<br>Host, Exposed on the Surface,<br>Antigenic Proteins in *Av.<br>paragallinarum* Strains", 
+  labs(y = "Mean % of Non-Homologous to<br>Host, Surface-Exposed,<br>Antigenic Proteins in *Av.<br>paragallinarum* Strains", 
        x = "COG category",
        tag = "B") +
   coord_flip()
@@ -179,6 +184,7 @@ p5A <- ggplot(Conserved, aes(x = Conservation_Results, y = Percentage_Conserved_
     legend.position = "none",
     plot.caption = element_markdown(halign = 0, hjust = 0.95),
     legend.title = element_blank(),
+    axis.title.x.bottom = element_markdown(face="bold"), 
     axis.text.y = element_markdown(family = "Times New Roman", size = 12, 
                                    color = "black"),
     axis.text.x = element_markdown(family = "Times New Roman", size = 14, 
@@ -188,7 +194,7 @@ p5A <- ggplot(Conserved, aes(x = Conservation_Results, y = Percentage_Conserved_
                                     linewidth = 0.3)
   ) + 
   labs(
-    y = "Conservation across *Av.paragallinarum*<br>Proteins (Exposed, Antigenic,<br>Non-Homologous to Host)",
+    y = "Conservation across *Av.paragallinarum*<br>Proteins (Non-Homologous to Host<br>Surface-Exposed and Antigenic)",
     tag = "A",
     x = ""
   ) + 

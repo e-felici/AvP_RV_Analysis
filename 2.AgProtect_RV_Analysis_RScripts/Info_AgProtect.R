@@ -38,7 +38,7 @@ tryCatch({
       Strain = "Experimental_Antigens",
       Mean_Schneider_Entropy = "0", 
       Strain_count = num_subfolders, 
-      Cluster_Number = "0",
+      Cluster_Number = "-1",
       Conservation = "1",
       Conservation_Results = "-"
     )

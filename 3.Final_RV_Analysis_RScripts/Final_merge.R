@@ -38,9 +38,12 @@ tryCatch({
   
   Results <- left_join(Results, Conservation, by = "ID")
   
+  Results$Cluster_Number <- as.factor(Results$Cluster_Number)
+  
   #Adding Experimental Antigens
   AgProtect <- read_tsv(paste0(AgProtect,"/Final_results-AgProtect.tsv"), col_names = TRUE)
   AgProtect$Mean_Schneider_Entropy <- as.double(AgProtect$Mean_Schneider_Entropy)
+  AgProtect$Cluster_Number <- as.factor(AgProtect$Cluster_Number)
   
   Results <- full_join(Results, AgProtect, by = NULL)
   

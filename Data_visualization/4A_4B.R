@@ -184,13 +184,14 @@ p4B <- ggplot(means_SL, aes(fill=factor(SubcellularLocalization,
                  title = element_text(family = "Times New Roman"), 
                  legend.position= "bottom",
                  legend.location = "plot",
+                 axis.title.x.bottom = element_markdown(face="bold"), 
                  legend.byrow = T,
                  legend.title = element_blank(),
                  text = element_text(family = "Times New Roman", size = 14), 
                  panel.background =  element_rect(fill = "white"), 
                  panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                                  linewidth = 0.3)) + 
-           labs(y = "Mean % of Non Homologous<br>to Host, Antigenic Proteins in *Av.<br>paragallinarum* Strains", 
+           labs(y = "Mean % of Non-Homologous<br>to Host, Antigenic Proteins in *Av.<br>paragallinarum* Strains", 
                 x = "COG category",
                 tag = "B") +
            coord_flip() + 
@@ -245,6 +246,8 @@ p4A <- ggplot(Exposed, aes(x = SubcellularLocalization, y = SL_Percent)) +
     legend.position = "none",
     plot.caption = element_markdown(halign = 0, hjust = 0.95),
     legend.title = element_blank(),
+    plot.tag.location = "margin",
+    axis.title.y.left = element_markdown(face="bold"), 
     axis.text.y = element_text(family = "Times New Roman", size = 14, color = "black"),
     axis.title.y = element_text(family = "Times New Roman", size = 14, color = "black", face = "bold"),
     axis.text.x = element_text(family = "Times New Roman", size = 14, color = "black",face = "bold"),
@@ -331,7 +334,8 @@ p4C <- ggplot(means_SL, aes(fill=SubcellularLocalization,
   theme(axis.title = element_markdown(face="bold"), 
         axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
         title = element_text(family = "Times New Roman"), 
-        legend.position= "none",       
+        legend.position= "none",      
+        axis.title.x.bottom = element_markdown(face="bold"), 
         axis.text.y = element_blank(),
         axis.title.y = element_blank(),
         legend.title = element_blank(),
@@ -339,7 +343,7 @@ p4C <- ggplot(means_SL, aes(fill=SubcellularLocalization,
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of Non Homologous<br>to Host, Antigenic<br>Experimental Antigens", 
+  labs(y = "% of Non-Homologous<br>to Host, Antigenic<br>Experimental Antigens", 
        x = "COG category",
        tag = "C") +
   coord_flip() + 
@@ -353,6 +357,8 @@ AAAA
 AAAA
 AAAA
 AAAA
+AAAA
+BBCC
 BBCC
 BBCC
 BBCC

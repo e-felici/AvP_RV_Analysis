@@ -3,6 +3,9 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr) 
 library(ggtext)
+library(patchwork)
+library(ggstatsplot)
+library(taylor)
 
 #Define paths
 results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
@@ -14,13 +17,15 @@ Results <- read_tsv(results_path, col_names = T)
 Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental_Antigens",
                                   "Experimental Antigens")
-
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Non Host Homologue",
+                                                     "Non-Host Homologue")
 # Find total number of proteins per strain
 Strain_number = group_by(Results, Strain) %>% 
   summarise("Total_Number_of_proteins_per_Strain"=n()) 
 
 COG <- Results %>%
-  filter(Host_Homologue_Result_All == "Non Host Homologue") %>%
+  filter(Host_Homologue_Result_All == "Non-Host Homologue") %>%
   select(ID, COG_category_description, Strain) %>%
   group_by(Strain, COG_category_description) %>%
   summarise(Total_Number_of_proteins_COG = n()) %>%
@@ -42,7 +47,7 @@ AgProt_Tot <- Ag_Total %>%
   pull(mean_percentage)
 
 # Filter non-host homologue proteins
-Antigenics <- filter(Results, Host_Homologue_Result_All == "Non Host Homologue")
+Antigenics <- filter(Results, Host_Homologue_Result_All == "Non-Host Homologue")
 
 Ag_COG <- Antigenics %>%
   group_by(AntigenicityResult, Strain, COG_category_description) %>%
@@ -54,7 +59,7 @@ Antigenics <- Antigenics %>%
 
 # Add the total number of non-host homologue proteins per strain
 Host <- read_tsv(paste0(output_path,"/Host.tsv"))
-Host <- filter(Host, Host_Homologue_Result_All == "Non Host Homologue")
+Host <- filter(Host, Host_Homologue_Result_All == "Non-Host Homologue")
 Antigenics <- full_join(Antigenics, Host, by = "Strain")
 rm(Host)
 
@@ -109,10 +114,11 @@ means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_descr
 
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "NON-ANTIGEN",
-                                               "Non antigenic")
+                                               "Non-Antigenic Protein")
+
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "ANTIGEN",
-                                               "Antigenic")
+                                               "Antigenic Protein")
 
 COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
                                     "RNA processing and modification", 
@@ -142,24 +148,35 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
                                     "Function unknown", 
                                     "Proteins not assigned to any COG")
 
-# Create the second plot (Figure 2B)
+all_levels <- c("Non-Antigenic Protein","Antigenic Protein")
+
+means_ag <- means_ag %>%
+  mutate(AntigenicityResult = factor(AntigenicityResult, 
+                                     levels = all_levels)
+  )
+
+fill_scale <- scale_fill_manual(
+  values = c("Antigenic Protein" = "olivedrab", "Non-Antigenic Protein" = "#9e2f28"),
+  drop = FALSE
+)
+
 p3B <- ggplot(means_ag, aes(fill=AntigenicityResult, 
                             y=mean_value, 
                             x=fct_rev(factor(COG_category_description, 
                                              levels=COG_category_description_order))
 )) + 
-  geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values =c("olivedrab","#9e2f28")) +
+  geom_bar(position="stack", stat="identity") +
+  fill_scale +
   theme(axis.title = element_markdown(face="bold"), 
-        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        axis.text = element_markdown(family = "Times New Roman", size = 10, color = "black"),
         title = element_text(family = "Times New Roman"), 
-        legend.position= "none",
         legend.title = element_blank(),
+        axis.title.x.bottom = element_markdown(face="bold"), 
         text = element_text(family = "Times New Roman", size = 14), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of Non Homologous<br>to Host Proteins in *Av.<br>paragallinarum* Strains", 
+  labs(y = "Mean % of Non-Homologous<br>to Host Proteins in *Av.<br>paragallinarum* Strains", 
        x = "COG category",
        tag = "B") +
   coord_flip() + 
@@ -189,7 +206,7 @@ p3A <- ggbetweenstats(
   data = Antigenics,
   x = Group,
   y = Ag_Percent,
-  centrality.label.args = list(color = "transparent", size=0, box.padding=200),  
+  centrality.label.args = list(color = "transparent", size = 0, box.padding = 200),  
   centrality.point.args = list(color = "#25482f", size = 6),
   point.args = list(
     position = ggplot2::position_jitterdodge(dodge.width = 0.6),
@@ -215,12 +232,14 @@ p3A <- ggbetweenstats(
       legend.text = ggtext::element_markdown(family = "Times New Roman",size = 11),
       legend.title = element_blank(),
       axis.text.x = element_blank(),
+      axis.title.y.left = ggtext::element_markdown(family = "Times New Roman",size = 14),
       panel.background = element_rect(fill = "white"), 
       panel.grid.major = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3),
       panel.grid.minor = element_blank(),
       legend.position = "bottom",
       legend.box = "vertical",
-      legend.direction = "vertical"
+      legend.direction = "vertical",
+      plot.tag = element_text(family = "Times New Roman", size = 16)
     ),
     labs(
       y = "Percentage of Antigenic Proteins<br>(Non-Homologous to Host)",
@@ -252,10 +271,10 @@ means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_descr
 
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "NON-ANTIGEN",
-                                               "Non antigenic")
+                                               "Non-Antigenic Protein")
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "ANTIGEN",
-                                               "Antigenic")
+                                               "Antigenic Protein")
 
 COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
                                     "RNA processing and modification", 
@@ -285,45 +304,64 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
                                     "Function unknown", 
                                     "Proteins not assigned to any COG")
 
-# Create the second plot (Figure 2B)
+means_ag <- means_ag %>%
+  mutate(AntigenicityResult = factor(AntigenicityResult, 
+                                     levels = all_levels))
+
 p3C <- ggplot(means_ag, aes(fill=AntigenicityResult, 
                             y=mean_value, 
                             x=fct_rev(factor(COG_category_description, 
                                              levels=COG_category_description_order))
 ))  + 
-  geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values =c("olivedrab","#9e2f28")) +
-  theme(axis.title.x = element_markdown(face="bold"), 
+  geom_bar(position="stack", stat="identity") +
+  fill_scale +
+  theme(axis.title.x = ggtext::element_markdown(face="bold"), 
+        axis.title.x.bottom = element_markdown(face="bold"), 
         axis.title.y = element_blank(),
         axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
         axis.text.y = element_blank(),
         title = element_text(family = "Times New Roman"), 
-        legend.position = "bottom",
-        legend.box = "vertical",
-        legend.box.just = "bottom",
-        legend.direction = "vertical",
         legend.title = element_blank(),
         legend.text = ggtext::element_markdown(family = "Times New Roman"),
         text = element_text(family = "Times New Roman", size = 14), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of Non<br>Homologous to Host<br>Experimental Antigens", 
+  labs(y = "% of Non-Homologous<br>to Host Experimental<br>Antigens", 
        x = "COG category",
        tag = "C") +
   coord_flip() + 
   ylim(0, 25)
+
 p3C
 
 layout <- '
-AAABBBBCCCC
-AAABBBBCCCC
-AAABBBBCCCC
-AAABBBBCCCC
-DDDBBBBCCCC
+AAABBBBBBBB
 '
-wrap_plots(A = p3A, B = p3B, C= p3C, D = guide_area(), design = layout)  +
-  plot_layout(guides = 'collect')
+
+patch <- p3A + plot_layout(guides = 'keep') 
+patch2 <- (p3B | p3C) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "bottom",
+        legend.direction = "vertical",
+        legend.title = element_blank())
+
+wrap_plots(A = patch, B = patch2, design = layout)
 
 ggsave("3A&B.png", device = "png", path = output_path, 
-       width =3500, height = 2000, units="px")
+       width =3500, height = 2200, units="px")
+
+Mean_Percentage_Ag_Total <- Ag_Total %>%
+  filter(AntigenicityResult == "ANTIGEN", 
+         Strain != "Experimental Antigens") %>%
+  summarise(mean_percentage = round(mean(Percentage_Ag_Total), digits = 2)) %>%
+  pull(mean_percentage)
+
+Mean_Percentage_Ag_NonHH <- Antigenics %>%
+  filter(AntigenicityResult == "ANTIGEN", 
+         Strain != "Experimental Antigens") %>%
+  summarise(mean_percentage = round(mean(Percentage_Antigenic_or_Not), digits = 2)) %>%
+  pull(mean_percentage)
+
