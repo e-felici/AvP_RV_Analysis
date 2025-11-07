@@ -13,7 +13,7 @@ Exposed <- read_tsv(paste0(output_path,"/Exposed.tsv"))
 Conserved <- read_tsv(paste0(output_path,"/Conserved.tsv"))
 
 Host <- Host %>%
-  filter(Host_Homologue_Result_All == "Non Host Homologue") %>%
+  filter(Host_Homologue_Result_All == "Proteins with **no sequence similarity** to any protein in any host") %>%
   select(Strain, Host_Homologue_or_NonHH_Proteins, 
          Total_Number_of_proteins_per_Strain)
 
@@ -38,16 +38,16 @@ All <- full_join(All, Conserved, by = "Strain")
 rm(Antigenics,Exposed,Conserved,Host)
 
 All <- All %>%
-  rename("Total\nProteins" = Total_Number_of_proteins_per_Strain, 
-         "No Homology\nwith Host" = Host_Homologue_or_NonHH_Proteins, 
+  rename("Total\nproteins" = Total_Number_of_proteins_per_Strain, 
+         "No similarity\nto host sequences" = Host_Homologue_or_NonHH_Proteins, 
          "Antigenic" = Ag_or_NonAg_proteins,
-         "Exposed on\nCell Surface" = Exposed_proteins,
-         "Conserved and\nPrevalent" = Conserved_proteins)
+         "Exposed on\ncell surface" = Exposed_proteins,
+         "Conserved and\nprevalent" = Conserved_proteins)
 
 All <- All %>%
   bind_rows(
     All %>%  
-      filter(Strain != "Experimental Antigens") %>%    
+      filter(Strain != "Experimental antigens") %>%    
       select(-Strain) %>%
       summarise(across(everything(), ~ round(mean(.x, na.rm = TRUE), 0))) %>%   
       mutate(Strain = "Mean")             
@@ -55,25 +55,25 @@ All <- All %>%
 
 All <- All %>% 
   mutate(Percentage_retained = All$`Conserved and
-Prevalent` * 100 / All$`No Homology
-with Host`)
+prevalent` * 100 / All$`Total
+proteins`)
 
 All <- All %>%
-  mutate(Percentage_retained = if_else(Strain == "Experimental Antigens", `Exposed on
-Cell Surface` * 100 / `No Homology
-with Host`, 
+  mutate(Percentage_retained = if_else(Strain == "Experimental antigens", `Exposed on
+cell surface` * 100 /`Total
+proteins`, 
 Percentage_retained))
 
 All_Ag <- All %>%
-  filter(Strain=="Experimental Antigens")%>%
-  mutate(Group= "Experimental Antigens")
+  filter(Strain=="Experimental antigens")%>%
+  mutate(Group= "Experimental antigens")
 
 All_mean <- All %>%
   filter(Strain=="Mean")%>%
   mutate(Group= "Mean of *Av. paragallinarum* strains")
 
 All_AvP <- All %>%
-  filter(Strain!="Experimental Antigens") %>%
+  filter(Strain!="Experimental antigens") %>%
   filter(Strain!="Mean") %>%
   mutate(Group= "*Av. paragallinarum* individual strains")
 
@@ -87,8 +87,8 @@ All_mean$alphaLevel <-1
 
 #NA placeholder
 All_Ag <- All_Ag %>% mutate(`Conserved and
-Prevalent` = `Exposed on
-Cell Surface`)
+prevalent` = `Exposed on
+cell surface`)
 
 All <- full_join(All_AvP, All_Ag)
 All <- full_join(All, All_mean)
@@ -136,5 +136,6 @@ ggsave("6.png", device = "png", path = output_path,
 ###Note: manually fixed the experimental antigens column
 
 retained <- All %>% 
-  filter(Strain != "Experimental Antigens" & Strain != "Mean" ) %>%
+  filter(Strain != "Experimental antigens" & Strain != "Mean" ) %>%
   summarise(mean_percentage = round(mean(Percentage_retained), digits = 2)) 
+

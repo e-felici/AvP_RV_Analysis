@@ -2,6 +2,8 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr) 
 library(ggtext)
+library(patchwork)
+library(ggstatsplot)
 
 #Define paths
 results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
@@ -9,10 +11,19 @@ output_path <- "~/Desktop/Graficos"
 
 Results <- read_tsv(results_path)
 
-#Remove underscore
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Host Homologue and Non Host Homologue, depending on the Host",
+                                                     "Proteins with **sequence similarity** to at least one protein in **some hosts**")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Non Host Homologue",
+                                                     "Proteins with **no sequence similarity** to any protein in any host")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Host Homologue",
+                                                     "Proteins with **sequence similarity** to at least one protein in **all hosts**")
+
 Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental_Antigens",
-                                  "Experimental Antigens")
+                                  "Experimental antigens")
 
 # Find total number of proteins per strain
 Strain_number <- group_by(Results, Strain) %>% 
@@ -37,16 +48,16 @@ Exp_Total <- Exp_Total %>%
   mutate(Percentage_Exp_Total = Exp_or_NonExp_proteins_total * 100 / Total_Number_of_proteins_per_Strain )
 
 AgProt_Tot <- Exp_Total %>%
-  filter(Strain == "Experimental Antigens") 
+  filter(Strain == "Experimental antigens") 
 
 Mean_Percentage_Exp_Total <- Exp_Total %>%
-  filter(Strain != "Experimental Antigens") %>%
+  filter(Strain != "Experimental antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Exp_Total), digits = 2)) 
 
 ##### Grafico Exposition ####
 #filtro
 Exposed <- filter(Results, AntigenicityResult ==  "ANTIGEN" & 
-                   Host_Homologue_Result_All ==  "Non Host Homologue")
+                   Host_Homologue_Result_All ==  "Proteins with **no sequence similarity** to any protein in any host")
 
 SL_COG <- group_by(Exposed, SubcellularLocalization, Strain, COG_category_description) %>%
   summarise(Exposed_or_Not_proteins_COG=n())
@@ -87,7 +98,7 @@ write_tsv(Exposed, paste0(output_path,"/Exposed.tsv"))
 # Calculate the mean percentage of non-antigenic proteins
 Mean_Percentage_Exposed <- Exposed %>%
   filter(SubcellularLocalization == "OuterMembrane" | SubcellularLocalization == "Extracellular",
-         Strain != "Experimental Antigens") %>%
+         Strain != "Experimental antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Exposed_or_Not), digits = 2)) 
 
 Mean_Percentage_Exposed <- sum(Mean_Percentage_Exposed$mean_percentage)
@@ -114,7 +125,7 @@ means_SL <- SL_COG %>%
   na.omit(means_SL)
 
 means_SL <- bind_rows(means_SL, tibble(COG_category_description = "-", 
-                                       SubcellularLocalization = "Cell Wall",
+                                       SubcellularLocalization = "Cell wall",
                                        mean_value = 0))
 
 means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_description,
@@ -131,11 +142,11 @@ means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_descr
 
 means_SL$SubcellularLocalization <- str_replace_all(means_SL$SubcellularLocalization,
                                                      "CytoplasmicMembrane",
-                                                     "Cytoplasmic Membrane")
+                                                     "Cytoplasmic membrane")
 
 means_SL$SubcellularLocalization <- str_replace_all(means_SL$SubcellularLocalization,
                                                     "OuterMembrane",
-                                                    "Outer Membrane")
+                                                    "Outer membrane")
 
 COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
                                     "RNA processing and modification", 
@@ -171,9 +182,9 @@ means_SL <- filter(means_SL, !is.na(COG_category_description))
 means_SL$SubcellularLocalization <- as.factor(means_SL$SubcellularLocalization)
 
 p4B <- ggplot(means_SL, aes(fill=factor(SubcellularLocalization, 
-                                       levels=c("Unknown", "Cytoplasmic", "Cytoplasmic Membrane", 
-                                                "Periplasmic","Outer Membrane",
-                                                "Extracellular","Cell Wall")), 
+                                       levels=c("Unknown", "Cytoplasmic", "Cytoplasmic membrane", 
+                                                "Periplasmic","Outer membrane",
+                                                "Extracellular","Cell wall")), 
                            y=mean_value, x=fct_rev(factor(COG_category_description, 
                                                           levels=COG_category_description_order)))) + 
   geom_bar(position="stack", stat="identity") + 
@@ -191,44 +202,43 @@ p4B <- ggplot(means_SL, aes(fill=factor(SubcellularLocalization,
                  panel.background =  element_rect(fill = "white"), 
                  panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                                  linewidth = 0.3)) + 
-           labs(y = "Mean % of Non-Homologous<br>to Host, Antigenic Proteins in *Av.<br>paragallinarum* Strains", 
+           labs(y = "Mean % of *Av. paragallinarum*<br> antigenic proteins with no sequence<br>similarity to host proteins", 
                 x = "COG category",
                 tag = "B") +
            coord_flip() + 
   ylim(0, 40)
          
 
-
 p4B
 
 Exposed <- Exposed %>% 
   mutate(
     SL_Percent = Exposed_or_Not_proteins * 100 / Total_Ag_proteins,
-    Group = ifelse(Strain == "Experimental Antigens",
-                   "Experimental Antigens",
+    Group = ifelse(Strain == "Experimental antigens",
+                   "Experimental antigens",
                    "*Av. paragallinarum* strains")
   )
 
 Exposed <- Exposed %>%
   mutate(SubcellularLocalization = recode(SubcellularLocalization,
-                                          "Cellwall" = "Cell Wall", 
+                                          "Cellwall" = "Cell wall", 
                                           "Cytoplasmic" = 'Cytoplasmic',
-                                          "CytoplasmicMembrane" = 'Cytoplasmic\nMembrane', 
+                                          "CytoplasmicMembrane" = 'Cytoplasmic\nmembrane', 
                                           "Extracellular" = 'Extracellular',
-                                          "OuterMembrane" = 'Outer\nMembrane',
+                                          "OuterMembrane" = 'Outer\nmembrane',
                                           "Periplasmic" = 'Periplasmic', 
                                           "Unknown" = 'Unknown'))
 
 Exposed$SubcellularLocalization <- factor(Exposed$SubcellularLocalization, 
-                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nMembrane", 
-                                                   "Periplasmic","Outer\nMembrane",
-                                                   "Extracellular","Cell Wall"))
+                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nmembrane", 
+                                                   "Periplasmic","Outer\nmembrane",
+                                                   "Extracellular","Cell wall"))
 
 AgProt <- Exposed %>%
-  filter(Strain == "Experimental Antigens")
+  filter(Strain == "Experimental antigens")
 
 Exposed <- Exposed %>%
-  filter(Strain != "Experimental Antigens")
+  filter(Strain != "Experimental antigens")
 
 
 p4A <- ggplot(Exposed, aes(x = SubcellularLocalization, y = SL_Percent)) +
@@ -256,7 +266,7 @@ p4A <- ggplot(Exposed, aes(x = SubcellularLocalization, y = SL_Percent)) +
                                     linewidth = 0.3)
   ) + 
   labs(
-    y = "Percentage of Non-Homologous to Host,<br>Antigenic Proteins in each Localization",
+    y = "% of antigenic proteins with no<br>sequence similarity to host<br>in each localisation",
     tag = "A",
     x = "",
     caption = "Violin plots: *Av. paragallinarum* strains<br>◆: Experimental Antigens  "
@@ -312,18 +322,18 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
 
 means_SL <- means_SL %>%
   mutate(SubcellularLocalization = recode(SubcellularLocalization,
-                                          "Cellwall" = "Cell Wall", 
+                                          "Cellwall" = "Cell wall", 
                                           "Cytoplasmic" = 'Cytoplasmic',
-                                          "CytoplasmicMembrane" = 'Cytoplasmic\nMembrane', 
+                                          "CytoplasmicMembrane" = 'Cytoplasmic\nmembrane', 
                                           "Extracellular" = 'Extracellular',
-                                          "OuterMembrane" = 'Outer\nMembrane',
+                                          "OuterMembrane" = 'Outer\nmembrane',
                                           "Periplasmic" = 'Periplasmic', 
                                           "Unknown" = 'Unknown'))
 
 means_SL$SubcellularLocalization <-  factor(means_SL$SubcellularLocalization, 
-                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nMembrane", 
-                                                   "Periplasmic","Outer\nMembrane",
-                                                   "Extracellular","Cell Wall"))
+                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nmembrane", 
+                                                   "Periplasmic","Outer\nmembrane",
+                                                   "Extracellular","Cell wall"))
 
 p4C <- ggplot(means_SL, aes(fill=SubcellularLocalization,
                             y=mean_value, x=fct_rev(factor(COG_category_description, 
@@ -343,7 +353,7 @@ p4C <- ggplot(means_SL, aes(fill=SubcellularLocalization,
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "% of Non-Homologous<br>to Host, Antigenic<br>Experimental Antigens", 
+  labs(y = "% of experimental antigens<br>(antigenic, with no sequence<br>similarity to host proteins)", 
        x = "COG category",
        tag = "C") +
   coord_flip() + 
@@ -370,3 +380,4 @@ wrap_plots(A = free(p4A), B = p4B, C= p4C, D = guide_area(), design = layout)  +
 
 ggsave("4A&B.png", device = "png", path = output_path, 
        width =2900, height = 3000, units="px")
+

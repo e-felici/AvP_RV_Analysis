@@ -17,12 +17,18 @@ Results <- read_tsv(results_path)
 #Remove underscore
 Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental_Antigens",
-                                  "Experimental Antigens")
-
+                                  "Experimental antigens")
 
 Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
-                                                  "Non Host Homologue",
-                                                  "Non-Host Homologue")
+                                                     "Host Homologue and Non Host Homologue, depending on the Host",
+                                                     "Proteins with **sequence similarity** to at least one protein in **some hosts**")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Non Host Homologue",
+                                                     "Proteins with **no sequence similarity** to any protein in any host")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Host Homologue",
+                                                     "Proteins with **sequence similarity** to at least one protein in **all hosts**")
+
 
 # Find total number of proteins per strain
 Strain_number = group_by(Results, Strain) %>% 
@@ -47,8 +53,8 @@ write_tsv(Host, paste0(output_path,"/Host.tsv"))
 
 # Calculate the mean percentage of non-host homologue proteins
 Mean_Percentage_Host <- Host %>%
-  filter(Host_Homologue_Result_All == "Non-Host Homologue", 
-         Strain != "Experimental Antigens") %>%
+  filter(Host_Homologue_Result_All == "Proteins with **no sequence similarity** to any protein in any host", 
+         Strain != "Experimental antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Host), digits = 2)) %>%
   pull(mean_percentage)
 
@@ -68,8 +74,8 @@ means_Host_COG <- Host_COG %>%
   summarize(mean_value = mean(Percentage_Host_COG))
 
 means_Host_COG$COG_category_description <- str_replace_all(means_Host_COG$COG_category_description,
-                                  "_",
-                                  " ")
+                                                           "_",
+                                                           " ")
 
 means_Host_COG$COG_category_description <- str_replace_all(means_Host_COG$COG_category_description,
                                                            "-",
@@ -107,13 +113,13 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
                                     "Function unknown", 
                                     "Proteins not assigned to any COG")
 
-all_levels <- c("Host Homologue", 
-                "Host Homologue or Non-Host Homologue, depending on the Host",
-                "Non-Host Homologue")
+all_levels <- c("Proteins with **no sequence similarity** to any protein in any host",
+                "Proteins with **sequence similarity** to at least one protein in **some hosts**",
+                "Proteins with **sequence similarity** to at least one protein in **all hosts**")
 
 means_Host_COG <- means_Host_COG %>%
   bind_rows(tibble(
-    Host_Homologue_Result_All = "Host Homologue or Non-Host Homologue, depending on the Host",
+    Host_Homologue_Result_All = "Proteins with **sequence similarity** to at least one protein in **some hosts**",
     mean_value = 0,
     COG_category_description = "Proteins not assigned to any COG"
   ))
@@ -121,32 +127,34 @@ means_Host_COG <- means_Host_COG %>%
 means_Host_COG <- means_Host_COG %>%
   mutate(Host_Homologue_Result_All = factor(Host_Homologue_Result_All, 
                                             levels = all_levels)
-         )
+  )
 
 # Create the second plot (Figure 2B)
 p2B <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All, 
                                   y=mean_value, 
                                   x=fct_rev(factor(COG_category_description, 
                                                    levels=COG_category_description_order))
-                                    )) + 
+)) + 
   geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values =c("Host Homologue"="#9e2f28", 
-                              "Host Homologue or Non-Host Homologue, depending on the Host"="sienna2",
-                              "Non-Host Homologue"="olivedrab"),
+  scale_fill_manual(values =c("Proteins with **sequence similarity** to at least one protein in **all hosts**"="#9e2f28", 
+                              "Proteins with **sequence similarity** to at least one protein in **some hosts**"="sienna2",
+                              "Proteins with **no sequence similarity** to any protein in any host"="olivedrab"),
                     drop = FALSE) +
   theme(axis.title = element_markdown(face="bold"), 
+        axis.title.x.bottom = element_markdown(face="bold"), 
         axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
         title = element_text(family = "Times New Roman"), 
         legend.position= "bottom",
-  #      legend.justification = c("left", "bottom"),
- #       legend.box.just = "left",
-#        legend.margin = margin(6, 6, 6, 6),
+        legend.text = element_markdown(),
+        #      legend.justification = c("left", "bottom"),
+        #       legend.box.just = "left",
+        #        legend.margin = margin(6, 6, 6, 6),
         legend.title = element_blank(),
         text = element_text(family = "Times New Roman", size = 14), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of Total Proteins in<br>*Av. paragallinarum* Strains", 
+  labs(y = "Mean % of total proteins in<br>*Av. paragallinarum* strains", 
        x = "COG category",
        tag = "B") +
   coord_flip() + 
@@ -156,22 +164,22 @@ p2B
 
 
 Host <- Host %>% 
-  filter(Host_Homologue_Result_All == "Non-Host Homologue") %>%
+  filter(Host_Homologue_Result_All == "Proteins with **no sequence similarity** to any protein in any host") %>%
   mutate(
     HH_Percent = Host_Homologue_or_NonHH_Proteins * 100 / Total_Number_of_proteins_per_Strain,
-    Group = ifelse(Strain == "Experimental Antigens",
-                   "Experimental Antigens",
+    Group = ifelse(Strain == "Experimental antigens",
+                   "Experimental antigens",
                    "*Av. paragallinarum* strains")
   )
 
 AgProt <- Host %>% 
   ungroup() %>%
-  filter(Strain== "Experimental Antigens") %>%
+  filter(Strain== "Experimental antigens") %>%
   select(HH_Percent) %>%
   as.double()
 
 Host <- Host %>%
-  filter(Strain != "Experimental Antigens")
+  filter(Strain != "Experimental antigens")
 
 p2A <- ggbetweenstats(
   data = Host,
@@ -186,15 +194,15 @@ p2A <- ggbetweenstats(
     stroke = 0
   ),
   ggplot.component = list(
-  #  ggplot2::scale_y_continuous(
-   #   limits = c(70,85),
+    #  ggplot2::scale_y_continuous(
+    #   limits = c(70,85),
     #  breaks = seq(from = 70, to = 85, by = 5)
-  #  ),
+    #  ),
     scale_color_manual(values = c(
       "*Av. paragallinarum* strains" = "olivedrab", 
-      "Experimental Antigens" = "#0073C2FF"
+      "Experimental antigens" = "#0073C2FF"
     )),
-#    scale_y_continuous(breaks = seq(70, 85, 5), limits = c(70, 85)),
+    #    scale_y_continuous(breaks = seq(70, 85, 5), limits = c(70, 85)),
     theme(
       text = element_text(family = "Times New Roman", size = 14, color = "black"), 
       axis.text = element_text(family = "Times New Roman", size = 14, color = "black"),
@@ -211,13 +219,13 @@ p2A <- ggbetweenstats(
       panel.grid.minor = element_blank()
     ),
     labs(
-      y = "Percentage of Non-Host Homologue Proteins",
+      y = "Proteins with no sequence similarity to host (%)",
       tag = "A",
       x = ""
     )
   )
 ) + 
-  geom_point(aes(y = AgProt, color = "Experimental Antigens"), size = 5, shape = 18)
+  geom_point(aes(y = AgProt, color = "Experimental antigens"), size = 5, shape = 18)
 
 p2A
 
@@ -275,9 +283,6 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
                                     "Function unknown", 
                                     "Proteins not assigned to any COG")
 
-means_Host_COG$Host_Homologue_Result_All <- str_replace_all(means_Host_COG$Host_Homologue_Result_All,
-                                                           "and",
-                                                           "or")
 
 means_Host_COG <- means_Host_COG %>%
   mutate(Host_Homologue_Result_All = factor(Host_Homologue_Result_All, 
@@ -290,17 +295,18 @@ p2C <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
                                                    levels=COG_category_description_order))
 )) + 
   geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values =c("Host Homologue"="#9e2f28", 
-                              "Host Homologue or Non-Host Homologue, depending on the Host"="sienna2",
-                              "Non-Host Homologue"="olivedrab"),
+  scale_fill_manual(values =c("Proteins with **sequence similarity** to at least one protein in **all hosts**"="#9e2f28", 
+                              "Proteins with **sequence similarity** to at least one protein in **some hosts**"="sienna2",
+                              "Proteins with **no sequence similarity** to any protein in any host"="olivedrab"),
                     drop = FALSE) +
   theme(axis.title.x = element_markdown(face="bold"), 
+        axis.title.x.bottom = element_markdown(face="bold"), 
         axis.title.y = element_blank(),
         axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
         axis.text.y = element_blank(),
         title = element_text(family = "Times New Roman"), 
+        legend.text = element_markdown(),
         legend.position = "bottom",
-        #legend.position.inside = c(0.75, 0.9),
         legend.box = "vertical",
         legend.box.just = "bottom",
         legend.direction = "vertical",
@@ -309,7 +315,7 @@ p2C <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "% of Total<br>Experimental Antigens", 
+  labs(y = "% of total<br>experimental antigens", 
        x = "COG category",
        tag = "C") +
   coord_flip() + 

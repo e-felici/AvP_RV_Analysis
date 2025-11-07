@@ -10,17 +10,26 @@ output_path <- "~/Desktop/Graficos"
 
 Results <- read_tsv(results_path)
 
-#Remove underscore
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Host Homologue and Non Host Homologue, depending on the Host",
+                                                     "Proteins with **sequence similarity** to at least one protein in **some hosts**")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Non Host Homologue",
+                                                     "Proteins with **no sequence similarity** to any protein in any host")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Host Homologue",
+                                                     "Proteins with **sequence similarity** to at least one protein in **all hosts**")
+
 Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental_Antigens",
-                                  "Experimental Antigens")
+                                  "Experimental antigens")
 
 # Find total number of proteins per strain
 Strain_number = group_by(Results, Strain) %>% 
   summarise("Total_Number_of_proteins_per_Strain"=n()) 
 
 COG <- Results %>%
-  filter(Host_Homologue_Result_All == "Non Host Homologue",
+  filter(Host_Homologue_Result_All == "Proteins with **no sequence similarity** to any protein in any host",
          AntigenicityResult == "ANTIGEN", 
          Exposition == "Exposed") %>%
   select(ID, COG_category_description, Strain) %>%
@@ -38,7 +47,7 @@ Cons_Total <- Cons_Total %>%
   mutate(Percentage_Cons_Total = Cons_or_NonCons_proteins_total * 100 / Total_Number_of_proteins_per_Strain )
 
 Mean_Percentage_Cons_Total <- Cons_Total %>%
-  filter(Strain != "Experimental Antigens") %>%
+  filter(Strain != "Experimental antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Cons_Total), digits = 2)) 
 
 
@@ -46,7 +55,7 @@ Mean_Percentage_Cons_Total <- Cons_Total %>%
 #filtro
 
 Conserved <- filter(Results, AntigenicityResult ==  "ANTIGEN" & 
-                      Host_Homologue_Result_All ==  "Non Host Homologue" &
+                      Host_Homologue_Result_All ==  "Proteins with **no sequence similarity** to any protein in any host" &
                       Exposition == "Exposed")
 
 Conserved <- Conserved %>%
@@ -168,7 +177,7 @@ p5B <- ggplot(means_Cons, aes( fill= Conservation_Results,
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of Non-Homologous to<br>Host, Surface-Exposed,<br>Antigenic Proteins in *Av.<br>paragallinarum* Strains", 
+  labs(y = "Mean % of non-similar to host<br>sequences, surface-exposed,<br>antigenic proteins in *Av.<br>paragallinarum* strains", 
        x = "COG category",
        tag = "B") +
   coord_flip()
@@ -194,7 +203,7 @@ p5A <- ggplot(Conserved, aes(x = Conservation_Results, y = Percentage_Conserved_
                                     linewidth = 0.3)
   ) + 
   labs(
-    y = "Conservation across *Av.paragallinarum*<br>Proteins (Non-Homologous to Host<br>Surface-Exposed and Antigenic)",
+    y = "Conservation across *Av.paragallinarum*<br>proteins (non-similar to host sequences,<br>surface-exposed and antigenic)",
     tag = "A",
     x = ""
   ) + 

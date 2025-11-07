@@ -16,16 +16,22 @@ Results <- read_tsv(results_path, col_names = T)
 #Remove underscore
 Results$Strain <- str_replace_all(Results$Strain,
                                   "Experimental_Antigens",
-                                  "Experimental Antigens")
+                                  "Experimental antigens")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Host Homologue and Non Host Homologue, depending on the Host",
+                                                     "Proteins with **sequence similarity** to at least one protein in **some hosts**")
 Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
                                                      "Non Host Homologue",
-                                                     "Non-Host Homologue")
+                                                     "Proteins with **no sequence similarity** to any protein in any host")
+Results$Host_Homologue_Result_All <- str_replace_all(Results$Host_Homologue_Result_All,
+                                                     "Host Homologue",
+                                                     "Proteins with **sequence similarity** to at least one protein in **all hosts**")
 # Find total number of proteins per strain
 Strain_number = group_by(Results, Strain) %>% 
   summarise("Total_Number_of_proteins_per_Strain"=n()) 
 
 COG <- Results %>%
-  filter(Host_Homologue_Result_All == "Non-Host Homologue") %>%
+  filter(Host_Homologue_Result_All == "Proteins with **no sequence similarity** to any protein in any host") %>%
   select(ID, COG_category_description, Strain) %>%
   group_by(Strain, COG_category_description) %>%
   summarise(Total_Number_of_proteins_COG = n()) %>%
@@ -42,12 +48,12 @@ Ag_Total <- Ag_Total %>%
 
 AgProt_Tot <- Ag_Total %>%
   filter(AntigenicityResult == "ANTIGEN", 
-         Strain == "Experimental Antigens") %>%
+         Strain == "Experimental antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Ag_Total), digits = 2)) %>%
   pull(mean_percentage)
 
 # Filter non-host homologue proteins
-Antigenics <- filter(Results, Host_Homologue_Result_All == "Non-Host Homologue")
+Antigenics <- filter(Results, Host_Homologue_Result_All == "Proteins with **no sequence similarity** to any protein in any host")
 
 Ag_COG <- Antigenics %>%
   group_by(AntigenicityResult, Strain, COG_category_description) %>%
@@ -59,7 +65,7 @@ Antigenics <- Antigenics %>%
 
 # Add the total number of non-host homologue proteins per strain
 Host <- read_tsv(paste0(output_path,"/Host.tsv"))
-Host <- filter(Host, Host_Homologue_Result_All == "Non-Host Homologue")
+Host <- filter(Host, Host_Homologue_Result_All == "Proteins with **no sequence similarity** to any protein in any host")
 Antigenics <- full_join(Antigenics, Host, by = "Strain")
 rm(Host)
 
@@ -114,11 +120,11 @@ means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_descr
 
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "NON-ANTIGEN",
-                                               "Non-Antigenic Protein")
+                                               "**Non-antigenic** proteins")
 
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "ANTIGEN",
-                                               "Antigenic Protein")
+                                               "**Antigenic** proteins")
 
 COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
                                     "RNA processing and modification", 
@@ -148,7 +154,7 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
                                     "Function unknown", 
                                     "Proteins not assigned to any COG")
 
-all_levels <- c("Non-Antigenic Protein","Antigenic Protein")
+all_levels <- c("**Non-antigenic** proteins","**Antigenic** proteins")
 
 means_ag <- means_ag %>%
   mutate(AntigenicityResult = factor(AntigenicityResult, 
@@ -156,7 +162,7 @@ means_ag <- means_ag %>%
   )
 
 fill_scale <- scale_fill_manual(
-  values = c("Antigenic Protein" = "olivedrab", "Non-Antigenic Protein" = "#9e2f28"),
+  values = c("**Antigenic** proteins" = "olivedrab", "**Non-antigenic** proteins" = "#9e2f28"),
   drop = FALSE
 )
 
@@ -171,12 +177,13 @@ p3B <- ggplot(means_ag, aes(fill=AntigenicityResult,
         axis.text = element_markdown(family = "Times New Roman", size = 10, color = "black"),
         title = element_text(family = "Times New Roman"), 
         legend.title = element_blank(),
+        legend.text = element_markdown(size=12),
         axis.title.x.bottom = element_markdown(face="bold"), 
-        text = element_text(family = "Times New Roman", size = 14), 
+        text = element_text(family = "Times New Roman", size = 12), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of Non-Homologous<br>to Host Proteins in *Av.<br>paragallinarum* Strains", 
+  labs(y = "Mean % of *Av. paragallinarum*<br>proteins with no sequence similarity<br>to host proteins", 
        x = "COG category",
        tag = "B") +
   coord_flip() + 
@@ -188,19 +195,19 @@ Antigenics <- Antigenics %>%
   filter(AntigenicityResult == "ANTIGEN") %>%
   mutate(
     Ag_Percent = Ag_or_NonAg_proteins * 100 / Total_Non_HH_proteins,
-    Group = ifelse(Strain == "Experimental Antigens",
-                   "Experimental Antigens",
+    Group = ifelse(Strain == "Experimental antigens",
+                   "Experimental antigens",
                    "*Av. paragallinarum* strains")
   )
 
 AgProt <- Antigenics %>% 
   ungroup() %>%
-  filter(Strain== "Experimental Antigens") %>%
+  filter(Strain== "Experimental antigens") %>%
   select(Ag_Percent) %>%
   as.double()
 
 Antigenics <- Antigenics %>%
-  filter(Strain != "Experimental Antigens")
+  filter(Strain != "Experimental antigens")
 
 p3A <- ggbetweenstats(
   data = Antigenics,
@@ -217,38 +224,38 @@ p3A <- ggbetweenstats(
   ggplot.component = list(
     scale_color_manual(values = c(
       "*Av. paragallinarum* strains" = "olivedrab", 
-      "Experimental Antigens" = "#0073C2FF"
+      "Experimental antigens" = "#0073C2FF"
     )),
     theme(
       axis.text = ggtext::element_markdown(
-        family = "Times New Roman", size = 14, color = "black",
+        family = "Times New Roman", size = 13, color = "black",
         fill = "white", box.colour = "white", linetype = "solid",
         linewidth = 1, halign = 0.5, valign = 0.5, 
         padding = margin(2, 4, 2, 4), r = unit(5, "pt"),
         align_widths = TRUE, align_heights = TRUE, 
         rotate_margins = TRUE
       ),
-      axis.title = ggtext::element_markdown(family = "Times New Roman",size = 14),
-      legend.text = ggtext::element_markdown(family = "Times New Roman",size = 11),
+      axis.title = ggtext::element_markdown(family = "Times New Roman",size = 13),
+      legend.text = ggtext::element_markdown(family = "Times New Roman",size = 12),
       legend.title = element_blank(),
       axis.text.x = element_blank(),
-      axis.title.y.left = ggtext::element_markdown(family = "Times New Roman",size = 14),
+      axis.title.y.left = ggtext::element_markdown(family = "Times New Roman",size = 13),
       panel.background = element_rect(fill = "white"), 
       panel.grid.major = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3),
       panel.grid.minor = element_blank(),
       legend.position = "bottom",
       legend.box = "vertical",
       legend.direction = "vertical",
-      plot.tag = element_text(family = "Times New Roman", size = 16)
+      plot.tag = element_text(family = "Times New Roman", size = 15)
     ),
     labs(
-      y = "Percentage of Antigenic Proteins<br>(Non-Homologous to Host)",
+      y = "% of antigenic proteins (with no<br>sequence similarity to host)",
       tag = "A",
       x = ""
     )
   )
 ) + 
-  geom_point(aes(y = AgProt, color = "Experimental Antigens"), size = 5, shape = 18)
+  geom_point(aes(y = AgProt, color = "Experimental antigens"), size = 5, shape = 18)
 
 
 p3A
@@ -271,10 +278,10 @@ means_ag$COG_category_description <- str_replace_all(means_ag$COG_category_descr
 
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "NON-ANTIGEN",
-                                               "Non-Antigenic Protein")
+                                               "**Non-antigenic** proteins")
 means_ag$AntigenicityResult <- str_replace_all(means_ag$AntigenicityResult,
                                                "ANTIGEN",
-                                               "Antigenic Protein")
+                                               "**Antigenic** proteins")
 
 COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
                                     "RNA processing and modification", 
@@ -322,12 +329,12 @@ p3C <- ggplot(means_ag, aes(fill=AntigenicityResult,
         axis.text.y = element_blank(),
         title = element_text(family = "Times New Roman"), 
         legend.title = element_blank(),
-        legend.text = ggtext::element_markdown(family = "Times New Roman"),
-        text = element_text(family = "Times New Roman", size = 14), 
+        legend.text = ggtext::element_markdown(family = "Times New Roman", size=12),
+        text = element_text(family = "Times New Roman", size = 12), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "% of Non-Homologous<br>to Host Experimental<br>Antigens", 
+  labs(y = "% of experimental antigens<br>with no sequence similarity<br>to host proteins", 
        x = "COG category",
        tag = "C") +
   coord_flip() + 
@@ -355,13 +362,13 @@ ggsave("3A&B.png", device = "png", path = output_path,
 
 Mean_Percentage_Ag_Total <- Ag_Total %>%
   filter(AntigenicityResult == "ANTIGEN", 
-         Strain != "Experimental Antigens") %>%
+         Strain != "Experimental antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Ag_Total), digits = 2)) %>%
   pull(mean_percentage)
 
 Mean_Percentage_Ag_NonHH <- Antigenics %>%
   filter(AntigenicityResult == "ANTIGEN", 
-         Strain != "Experimental Antigens") %>%
+         Strain != "Experimental antigens") %>%
   summarise(mean_percentage = round(mean(Percentage_Antigenic_or_Not), digits = 2)) %>%
   pull(mean_percentage)
 
