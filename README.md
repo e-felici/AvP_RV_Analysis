@@ -41,6 +41,7 @@ This repository contains the scripts and workflows used in the identification an
   - [EMBOSS v. 6.6.0](https://emboss.sourceforge.net/)
   - [MAFFT v. 7.505](https://mafft.cbrc.jp/alignment/software/)
   - [CD-HIT v. 4.7](https://sites.google.com/view/cd-hit/home?authuser=0)
+  - [RpsbProc v. 0.5.0](https://ftp.ncbi.nlm.nih.gov/pub/mmdb/cdd/rpsbproc/)
 
 
 - **Other Tools**
@@ -51,8 +52,8 @@ This repository contains the scripts and workflows used in the identification an
 - Genomic sequences of *Av. paragallinarum* strains from [NCBI](https://www.ncbi.nlm.nih.gov/datasets/genome/?taxon=728)
 - [DEG](http://origin.tubic.org/deg/public/index.php/download) (Database of Essential Genes) Bacteria v. 10
 - [VFDB](https://www.mgc.ac.cn/VFs/download.htm) (Virulence Factor Database) full (set B)
-- COG preformatted database from the "little_endian" directory (Cog_LE.tar.gz) and summary information about the CD models (cddid.tbl.gz) from the [CDD FTP-archive](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/)
-- Descriptions of COG (cog-20.def.tab) and COG functional categories (fun-20.tab) from the [COG2020 FTP-archive](https://ftp.ncbi.nih.gov/pub/COG/COG2020/)
+- COG preformatted database from the "little_endian" directory ([Cog_LE.tar.gz](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cog_LE.tar.gz)) and the [family_superfamily_links](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/family_superfamily_links) file with a list of NCBI-curated and imported domain models (both from the [CDD FTP-archive](https://ftp.ncbi.nih.gov/pub/mmdb/cdd/))
+- Descriptions of COG _([cog-24.def.tab](https://ftp.ncbi.nih.gov/pub/COG/COG2024/data/cog-24.def.tab)) and COG functional categories ([cog-24.fun.tab](https://ftp.ncbi.nih.gov/pub/COG/COG2024/data/cog-24.fun.tab)) from the [COG2024 FTP-archive](https://ftp.ncbi.nih.gov/pub/COG/COG2024/)
 
 ## Usage
 0. Download all the required data. Ensure all external tools are installed and accessible in your system's PATH and install all necessary R and python packages.
@@ -117,8 +118,72 @@ The shell scripts are meant to be used in numerical order. Each script is detail
 │   ├── Final_results-GCF_000348525.1.tsv
 │   ├──  ... 91 files ...
 │   └── Final_results-GCF_900450705.1.tsv
+├── file_of_paths_example.txt
 └── README.md                                     # This Documentation
 ```
+
+### Note on file_of_paths_example.txt
+The file containing the paths must follow a predefined structure (i.e. a fixed order of paths).
+Do not leave blank spaces at the end of any line; each path must be followed only by a newline character.
+
+#### `path/to/strains_folder`
+Directory containing all strains. Each strain must be in a separate subdirectory, and each subdirectory must contain the corresponding proteome file (`protein.faa`).
+
+#### `path/to/make_multi_seq.pl`
+Path to the [`make_multi_seq.pl`](https://github.com/weizhongli/cdhit/wiki/3.-User's-Guide#make_multi_seqpl) script (an auxiliary CD-HIT tool).
+
+#### `path/to/Conservation_Analysis_folder`
+Directory where all conservation and prevalence results across strains will be stored.
+
+#### `path/to/Final_Results_folder`
+Directory where the final, curated results will be stored.
+
+#### `path/to/BlastpDB_folder`
+Directory containing the BLASTp databases created using the `0.DB_creation.sh` script.
+
+#### `path/to/1.AvP_RV_Analysis_RScripts`
+Path to the [`1.AvP_RV_Analysis_RScripts` folder](https://github.com/e-felici/AvP_RV_Analysis/tree/main/1.AvP_RV_Analysis_RScripts).
+
+#### `path/to/Psortb_docker_script.pl`
+Path to the [Perl wrapper script](https://raw.githubusercontent.com/brinkmanlab/psortb_commandline_docker/master/psortb) used to execute PSORTb via a `docker run` command.
+
+#### `path/to/SPAAN_folder`
+Directory containing all files required to run SPAAN in standalone mode.
+
+#### `path/to/VaxiJen.py`
+Path to the [`VaxiJen.py` script](https://github.com/e-felici/AvP_RV_Analysis/blob/main/VaxiJen_script/VaxiJen.py).
+
+#### `path/to/Chromedriver_binary`
+Path to the Chromedriver binary.
+
+#### `path/to/COG_folder_with_COG-CDD_resources`
+Directory containing the COG/CDD resources, including:
+* `rpsblast` and `rpsbproc` binaries
+* A `data` directory containing:
+  * [`cog_anot_manual.tbl`](https://github.com/e-felici/AvP_RV_Analysis/blob/main/Additional_data/COG/cog_anot_manual.tbl)
+  * `cog-24.fun.tab`
+  * `cog-24.def.tab`
+  * `family_superfamily_links`
+* A `db` directory containing the extracted COG preformatted database from the `little_endian` directory
+
+#### `path/to/AgProtect_data`
+Path to the [experimental antigens folder (`AgProtect_data`)](https://github.com/e-felici/AvP_RV_Analysis/tree/main/AgProtect_data).
+
+#### `path/to/2.AgProtect_RV_Analysis_RScripts`
+Path to the [`2.AgProtect_RV_Analysis_RScripts` folder](https://github.com/e-felici/AvP_RV_Analysis/tree/main/2.AgProtect_RV_Analysis_RScripts).
+
+#### `path/to/GramAdvanced_folder`
+Directory containing two files: `GramPositiveWithOM` and `GramNegativeWithoutOM`.
+Each file must correspond to the output obtained after running PSORTb on the experimental antigens FASTA file via the [PSORTb sequence submission page](https://www.psort.org/psortb/), using:
+* **GramPositiveWithOM**: “Positive with outer membrane”
+* **GramNegativeWithoutOM**: “Negative without outer membrane”
+In both cases, results must be downloaded in **Short Format (tab-delimited)**.
+
+#### `path/to/3.Final_RV_Analysis_RScripts`
+Path to the [`3.Final_RV_Analysis_RScripts` folder](https://github.com/e-felici/AvP_RV_Analysis/tree/main/3.Final_RV_Analysis_RScripts).
+
+#### `path/to/VF_categories.txt`
+Path to the [`VF_categories.txt` file](https://github.com/e-felici/AvP_RV_Analysis/blob/main/Additional_data/VF_categories/VF_categories.txt).
 
 ## Disclaimer
 All scripts are provided as is, for reproducibility purposes only. No attempt has been made to optimise the code.
