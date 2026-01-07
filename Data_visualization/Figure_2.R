@@ -140,21 +140,21 @@ p2B <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
                               "Proteins with **sequence similarity** to at least one protein in **some hosts**"="sienna2",
                               "Proteins with **no sequence similarity** to any protein in any host"="olivedrab"),
                     drop = FALSE) +
-  theme(axis.title = element_markdown(face="bold"), 
+  theme(axis.title = element_markdown(face="bold", size = 8), 
         axis.title.x.bottom = element_markdown(face="bold"), 
-        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        axis.text = element_text(family = "Times New Roman", size = 6, color = "black"),
         title = element_text(family = "Times New Roman"), 
         legend.position= "bottom",
-        legend.text = element_markdown(),
+        legend.text = element_markdown(size = 7),
         #      legend.justification = c("left", "bottom"),
         #       legend.box.just = "left",
         #        legend.margin = margin(6, 6, 6, 6),
         legend.title = element_blank(),
-        text = element_text(family = "Times New Roman", size = 14), 
+        text = element_text(family = "Times New Roman", size = 8), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of total proteins in<br>*Av. paragallinarum* strains", 
+  labs(y = "Mean of total proteins in<br>*Av. paragallinarum* strains (%)", 
        x = "COG category",
        tag = "B") +
   coord_flip() + 
@@ -186,7 +186,7 @@ p2A <- ggbetweenstats(
   x = Group,
   y = HH_Percent,
   centrality.label.args = list(color = "transparent", size=0, box.padding=200),  
-  centrality.point.args = list(color = "#25482f", size = 6),
+  centrality.point.args = list(color = "#25482f", size = 4),
   point.args = list(
     position = ggplot2::position_jitterdodge(dodge.width = 0.6),
     alpha = 0.7, 
@@ -204,13 +204,14 @@ p2A <- ggbetweenstats(
     )),
     #    scale_y_continuous(breaks = seq(70, 85, 5), limits = c(70, 85)),
     theme(
-      text = element_text(family = "Times New Roman", size = 14, color = "black"), 
-      axis.text = element_text(family = "Times New Roman", size = 14, color = "black"),
+      text = element_text(family = "Times New Roman", size = 8, color = "black"), 
+      axis.title = element_text(size = 8),
+      axis.text = element_text(family = "Times New Roman", size = 7, color = "black"),
       legend.position = "bottom",
       #legend.position.inside = c(0.5, 0.005),
       legend.box = "vertical",
       legend.direction = "vertical",
-      legend.text = ggtext::element_markdown(),
+      legend.text = ggtext::element_markdown(size = 7),
       legend.title = element_blank(),
       axis.text.x = element_blank(),
       panel.background = element_rect(fill = "white"), 
@@ -225,7 +226,7 @@ p2A <- ggbetweenstats(
     )
   )
 ) + 
-  geom_point(aes(y = AgProt, color = "Experimental antigens"), size = 5, shape = 18)
+  geom_point(aes(y = AgProt, color = "Experimental antigens"), size = 4, shape = 18)
 
 p2A
 
@@ -299,23 +300,23 @@ p2C <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
                               "Proteins with **sequence similarity** to at least one protein in **some hosts**"="sienna2",
                               "Proteins with **no sequence similarity** to any protein in any host"="olivedrab"),
                     drop = FALSE) +
-  theme(axis.title.x = element_markdown(face="bold"), 
+  theme(axis.title.x = element_markdown(face="bold", size = 8), 
         axis.title.x.bottom = element_markdown(face="bold"), 
         axis.title.y = element_blank(),
-        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        axis.text = element_text(family = "Times New Roman", size = 6, color = "black"),
         axis.text.y = element_blank(),
         title = element_text(family = "Times New Roman"), 
-        legend.text = element_markdown(),
+        legend.text = element_markdown(size = 7),
         legend.position = "bottom",
         legend.box = "vertical",
         legend.box.just = "bottom",
         legend.direction = "vertical",
         legend.title = element_blank(),
-        text = element_text(family = "Times New Roman", size = 14), 
+        text = element_text(family = "Times New Roman", size = 8), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "% of total<br>experimental antigens", 
+  labs(y = "Total experimental<br>antigens (%)", 
        x = "COG category",
        tag = "C") +
   coord_flip() + 
@@ -324,7 +325,7 @@ p2C <- ggplot(means_Host_COG, aes(fill=Host_Homologue_Result_All,
 p2C
 
 layout <- '
-AAABBBBBBBB
+AAAABBBBBBBBB
 '
 
 patch <- p2A + plot_layout(guides = 'keep') 
@@ -334,12 +335,10 @@ patch2 <- (p2B | p2C) +
         legend.box = "vertical",
         legend.box.just = "bottom",
         legend.direction = "vertical",
-        legend.title = element_blank())
+        legend.title = element_blank(),
+        legend.key.size = unit(0.8, "line"))
 
 wrap_plots(A = patch, B = patch2, design = layout)
 
-# Save the combined plot as a PNG file
-ggsave("2A&B.png", device = "png", path = output_path, 
-       width =3700, height = 2200, units="px")
-
-
+ggsave("Figure_2.jpeg", device = "jpeg", path = output_path, 
+       width =190, height = 113, units="mm", dpi = 500, bg = "white")

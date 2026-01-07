@@ -1,5 +1,9 @@
 library(tidyverse)
+library(patchwork)
+library(ggthemes)
 
+
+output_path <-"~/Desktop/Graficos"
 Results <- read_tsv("~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv")
 
 #Total proteome:
@@ -54,22 +58,6 @@ summary_results <- thresholds %>%
               )
   })
 
-ggplot(summary_results, aes(x = Conservation_score, y = Strain_prevalence, fill = n_passed)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient(low = "olivedrab", high = "firebrick4") +
-  labs(
-    title = "Number of proteins passing each threshold combination",
-    subtitle = "Total proteome reduction",
-    x = "Prevalence threshold",
-    y = "Conservation threshold",
-    fill = "n passed") +
-  geom_text(aes(label = round(fraction_passed, 4))) +
-  scale_x_continuous(limits = c(0.70, 1)) +
-  scale_y_continuous(limits = c(70, 100)) +
-  theme( panel.background = element_rect(fill = "white"), 
-         panel.grid = element_line(colour = "grey", linetype = "dotted", 
-                                         linewidth = 0.3))
-
 # Apply filters and summarize how many rows pass each combination
 summary_filtered_results <- thresholds %>%
   pmap_dfr(\(cons, prev) {
@@ -84,19 +72,67 @@ summary_filtered_results <- thresholds %>%
       )
   })
 
-ggplot(summary_filtered_results, aes(x = Conservation_score, y = Strain_prevalence, fill = n_passed)) +
+fill_limits <- range(
+  c(summary_results$n_passed,
+    summary_filtered_results$n_passed),
+  na.rm = TRUE
+)
+
+scale_fill <-  scale_fill_gradient2_tableau(palette = "Temperature Diverging",
+                                            limits = fill_limits,
+                                            trans = scales::pseudo_log_trans(base = 10))
+
+
+S4A <- ggplot(summary_results, aes(x = Conservation_score, y = Strain_prevalence, fill = n_passed)) +
   geom_tile(color = "white") +
-  scale_fill_gradient(low = "olivedrab", high = "firebrick4") +
+  scale_fill +
   labs(
-    title = "Number of proteins passing each threshold combination",
-    subtitle = "Filtered proteome (antigenic, exposed in the surface non-similar to chicken proteins) reduction",
-    x = "Prevalence threshold",
-    y = "Conservation threshold",
-    fill = "n passed") +
-  geom_text(aes(label = round(fraction_passed, 4))) +
+    title = "Total proteome",
+    x = "Conservation score threshold",
+    y = "Prevalence threshold",
+    fill = "N° of proteins\npassed (pseudo-log10)") +
+  geom_text(aes(label = round(fraction_passed, 4)), size = 1.5) +
   scale_x_continuous(limits = c(0.70, 1)) +
   scale_y_continuous(limits = c(70, 100)) +
-  theme( panel.background = element_rect(fill = "white"), 
+  theme( axis.title = element_text(size = 8),
+         axis.text = element_text(size = 7),
+         legend.text = element_text(size = 7),
+         panel.background = element_rect(fill = "white"), 
          panel.grid = element_line(colour = "grey", linetype = "dotted", 
-                                   linewidth = 0.3))
+                                         linewidth = 0.3)) + 
+  labs(tag = "A")
 
+S4A
+
+
+S4B <- ggplot(summary_filtered_results, aes(x = Conservation_score, y = Strain_prevalence, fill = n_passed)) +
+  geom_tile(color = "white") +
+ scale_fill +
+  labs(
+    title = "Filtered proteome",
+    x = "Conservation score threshold",
+    y = "Prevalence threshold",
+    fill =  "N° of proteins\npassed (pseudo-log10)") +
+  geom_text(aes(label = round(fraction_passed, 4)), size = 1.5) +
+  scale_x_continuous(limits = c(0.70, 1)) +
+  scale_y_continuous(limits = c(70, 100)) +
+  theme( axis.title = element_text(size = 8),
+         axis.text = element_text(size = 7),
+         legend.text = element_text(size = 7),
+         panel.background = element_rect(fill = "white"), 
+         panel.grid = element_line(colour = "grey", linetype = "dotted", 
+                                   linewidth = 0.3))+ 
+  labs(tag = "B") 
+
+S4B
+
+
+
+combined <- S4A + S4B & theme(text = element_text(family = "Times New Roman", size = 8, 
+                                                  color = "black"),
+                              legend.key.height = unit(1.7, "cm"))
+combined + plot_layout(guides = "collect")
+
+
+ggsave("Figure_S2.jpeg", device = "jpeg", path = output_path, 
+       width =190, height = 110, units="mm", dpi = 500, bg = "white")

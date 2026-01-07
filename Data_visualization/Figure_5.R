@@ -60,12 +60,12 @@ Conserved <- filter(Results, AntigenicityResult ==  "ANTIGEN" &
 
 Conserved <- Conserved %>%
   mutate(Conservation_Results = recode(Conservation_Results,
-                                       "Conservation Score < 0.80, less than 90% of the strains" = "**Sequence not conserved** +<br>**Not prevalent**",
-                                       "Conservation Score > 0.80, less than 90% of the strains" = "Conserved sequence (CS > 0.80)<br>but **not prevalent**",
-                                       "Conservation Score > 0.95, less than 90% of the strains" = "Conserved sequence (CS > 0.80)<br>but **not prevalent**",
-                                       "Conservation Score < 0.80, more than 90% of the strains" = "Prevalent in > 90 % of the strains<br>but **sequence not conserved**",
-                                       "Conservation Score > 0.80, more than 90% of the strains" = "**Conserved sequence** (CS > 0.80) +<br>**prevalent** in > 90 % of the strains",
-                                       "Conservation Score > 0.95, more than 90% of the strains" = "**Conserved sequence** (CS > 0.80) +<br>**prevalent** in > 90 % of the strains"
+                                       "Conservation Score < 0.80, less than 90% of the strains" = "**Non-conserved sequence<br>Non-prevalent**",
+                                       "Conservation Score > 0.80, less than 90% of the strains" = "Conserved sequence<br>**Non-prevalent**",
+                                       "Conservation Score > 0.95, less than 90% of the strains" = "Conserved sequence<br>**Non-prevalent**",
+                                       "Conservation Score < 0.80, more than 90% of the strains" = "**Non-conserved sequence**<br>Prevalent",
+                                       "Conservation Score > 0.80, more than 90% of the strains" = "**Conserved sequence<br>Prevalent**",
+                                       "Conservation Score > 0.95, more than 90% of the strains" = "**Conserved sequence<br>Prevalent**"
   ))
 
 Cons_COG <- group_by(Conserved, Conservation_Results, Strain, COG_category_description) %>%
@@ -86,7 +86,7 @@ write_tsv(Conserved, paste0(output_path,"/Conserved.tsv"))
 Conserved <- Conserved%>% filter(substr(Strain, 1, 3) != "Exp")
 
 Mean_Percentage_Conserved <- Conserved%>%
-  filter(Conservation_Results == "**Conserved sequence** (CS > 0.80) +<br>**prevalent** in > 90 % of the strains") %>%
+  filter(Conservation_Results == "**Conserved sequence<br>Prevalent**") %>%
   summarise(mean_percentage = round(mean(Percentage_Conserved_or_Not), digits = 2)) 
 
 Mean_Percentage_Conserved <- sum(Mean_Percentage_Conserved$mean_percentage)
@@ -151,79 +151,101 @@ COG_category_description_order <- c("Translation, ribosomal structure and biogen
 means_Cons= na.omit(means_Cons)
 
 means_Cons$Conservation_Results <- factor(means_Cons$Conservation_Results, 
-                                          levels = c("**Sequence not conserved** +<br>**Not prevalent**",
-                                                     "Conserved sequence (CS > 0.80)<br>but **not prevalent**",
-                                                     "Prevalent in > 90 % of the strains<br>but **sequence not conserved**",
-                                                     "**Conserved sequence** (CS > 0.80) +<br>**prevalent** in > 90 % of the strains"))
+                                          levels = c("**Non-conserved sequence<br>Non-prevalent**",
+                                                     "**Non-conserved sequence**<br>Prevalent",
+                                                     "Conserved sequence<br>**Non-prevalent**",
+                                                     "**Conserved sequence<br>Prevalent**"))
 
 means_Cons$COG_category_description <- factor(means_Cons$COG_category_description,
                                               levels = COG_category_description_order)
 
+Conserved$Conservation_Results <- factor(Conserved$Conservation_Results, 
+                                         levels = c("**Non-conserved sequence<br>Non-prevalent**",
+                                                    "**Non-conserved sequence**<br>Prevalent",
+                                                    "Conserved sequence<br>**Non-prevalent**",
+                                                    "**Conserved sequence<br>Prevalent**"))
+
+
+#Graficos
 p5B <- ggplot(means_Cons, aes( fill= Conservation_Results, 
                                y = mean_value, x = fct_rev(COG_category_description))) + 
   geom_bar(position="stack", stat="identity") + 
-  scale_fill_manual(values=c("#4f2f4a","#deb867","#9e2f28","olivedrab")) +
-  #scale_fill_viridis(discrete=T, begin = 0.3, end=0.65)  +
-  theme(axis.title = element_markdown(face="bold"), 
-        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+  scale_fill_manual(values=c("#9e2f28","#4f2f4a","#deb867","olivedrab")) +
+  theme(axis.title = element_markdown(face="bold", size = 8), 
+        axis.text = element_text(family = "Times New Roman", size = 6, color = "black"),
         title = element_text(family = "Times New Roman"), 
         legend.position= "bottom",
-        legend.location = "plot",
-        legend.byrow = T,
         legend.title = element_blank(),
-        legend.text = element_markdown(),
+        legend.text = element_markdown(size = 6),
+        legend.direction = "vertical",
+        legend.key.size = unit(0.9, "line"),
         axis.title.x.bottom = element_markdown(face="bold"), 
-        text = element_text(family = "Times New Roman", size = 14), 
+        text = element_text(family = "Times New Roman", size = 8), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of non-similar to host<br>sequences, surface-exposed,<br>antigenic proteins in *Av.<br>paragallinarum* strains", 
+  labs(y = "Mean proportion of filtered proteins<br>across *Av. paragallinarum* strains (%)", 
        x = "COG category",
        tag = "B") +
   coord_flip()
 
 p5B
 
-p5A <- ggplot(Conserved, aes(x = Conservation_Results, y = Percentage_Conserved_or_Not)) +
-  geom_violin(width = 1.4, aes(fill = Conservation_Results)) +
-  scale_fill_manual(values =c("olivedrab","#4f2f4a","#deb867","#9e2f28")) +
+Conserved <- Conserved %>%
+  ungroup() %>%
+  complete(Strain, Conservation_Results, fill = list(Percent = 0))
+
+Conserved <- Conserved %>% replace_na(list(Percentage_Conserved_or_Not = 0))
+
+Mean_Percentage_Cons <- Conserved  %>%
+  group_by(Conservation_Results) %>%
+  summarise(mean_percentage = round(mean(Percentage_Conserved_or_Not), digits = 2)) 
+
+
+p5A <- ggplot(Mean_Percentage_Cons, aes(x="", y=mean_percentage, fill=Conservation_Results)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  scale_fill_manual(values =c("#9e2f28","#4f2f4a","#deb867","olivedrab")) +
   theme(
-    text = element_text(family = "Times New Roman", size = 14, color = "black"), 
-    axis.title = element_markdown(face="bold"),
-    legend.position = "none",
-    plot.caption = element_markdown(halign = 0, hjust = 0.95),
+    text = element_text(family = "Times New Roman", size = 8, color = "black"), 
+    axis.title.y = element_blank(),
+    axis.title.x = element_markdown(face="bold", size = 8),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position= "bottom",
     legend.title = element_blank(),
-    axis.title.x.bottom = element_markdown(face="bold"), 
-    axis.text.y = element_markdown(family = "Times New Roman", size = 12, 
-                                   color = "black"),
-    axis.text.x = element_markdown(family = "Times New Roman", size = 14, 
-                                   color = "black", face = "bold"),
+    legend.text = element_markdown(size = 6),
+    legend.key.size = unit(0.9, "line"),
+    legend.direction = "vertical",
     panel.background = element_rect(fill = "white"), 
-    panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
-                                    linewidth = 0.3)
+    panel.grid.major = element_blank()
   ) + 
   labs(
-    y = "Conservation across *Av.paragallinarum*<br>proteins (non-similar to host sequences,<br>surface-exposed and antigenic)",
+    y = "Filtered *Av. paragallinarum* proteins",
     tag = "A",
     x = ""
-  ) + 
-  coord_flip()
-
+  )
 p5A
 
+
 layout <- '
-AAABBBB
-AAABBBB
-AAABBBB
-AAABBBB
-DDDD###
+EEEECCCCCCC
+EEEECCCCCCC
+EEEECCCCCCC
+EEEECCCCCCC
+EEEECCCCCCC
+EEEECCCCCCC
+EEEECCCCCCC
+EEEECCCCCCC
+####CCCCCCC
+####CCCCCCC
+DDDDCCCCCCC
 '
-wrap_plots(A = p5A, B = p5B, D = guide_area(), design = layout) +
-  plot_layout(guides = 'collect')
 
-ggsave("5A&B.png", device = "png", path = output_path, 
-       width =3500, height = 1800, units="px")
+final_plot <- wrap_plots(E = p5A, C=p5B, D = guide_area(), design = layout) +
+  plot_layout(guides = 'collect') 
 
-
+ggsave("Figure_5.jpeg", device = "jpeg", path = output_path, 
+       width =190, height = 80, units="mm", dpi = 500, bg = "white")
 
 

@@ -16,8 +16,8 @@ Ag_IDs <- read_tsv(paste0(AgProtDir,"/AllProteinIds-AgProtect.txt"),
 
 
 AgProt_Homology <- AgProt_Homology %>% mutate(Homology = ifelse(Host.Homologue=="-",
-                                                                "Non-Homologue",
-                                                                "Homologue"))
+                                                                "Non-similar to host proteins",
+                                                                "Similar"))
 
 #Then, we filter only the hosts that are relevant for that antigen
 #Split the Host column into separate rows
@@ -59,16 +59,15 @@ AgProt$Host <- str_replace_all(AgProt$Host,
 
 ggplot(AgProt, aes(fill=Homology, y=n, x=Host)) + 
   geom_bar(position="fill", stat="identity") + 
-  scale_fill_manual(values = c("#9e2f28", "olivedrab")) +
-  theme(text = element_text(family = "Times New Roman", size = 16),
+  scale_fill_manual(values = c( "olivedrab","#9e2f28")) +
+  theme(text = element_text(family = "Times New Roman"),
         axis.text.y = element_text(face = "italic"),
         legend.title = element_blank())+ 
   labs(x = "Host", 
-       y = "Proportion of Experimental Antigens\ncorresponding to each Host",
-       tag = "S1")  +
+       y = "Proportion of experimental antigens\ncorresponding to each host")  +
   coord_flip()
 
-ggsave("S1.png", device = "png", path = output_path, 
-       width =2500, height = 2000, units="px")
+ggsave("Figure_S4.jpeg", device = "jpeg", path = output_path, 
+       width =190, height = 110, units="mm", dpi = 500, bg = "white")
 
   

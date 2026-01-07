@@ -174,16 +174,18 @@ p3B <- ggplot(means_ag, aes(fill=AntigenicityResult,
   geom_bar(position="stack", stat="identity") +
   fill_scale +
   theme(axis.title = element_markdown(face="bold"), 
-        axis.text = element_markdown(family = "Times New Roman", size = 10, color = "black"),
+        axis.text = element_markdown(family = "Times New Roman", size = 6, color = "black"),
         title = element_text(family = "Times New Roman"), 
         legend.title = element_blank(),
-        legend.text = element_markdown(size=12),
+        legend.text = element_markdown(size = 7),
+        plot.title.position = "plot",
         axis.title.x.bottom = element_markdown(face="bold"), 
-        text = element_text(family = "Times New Roman", size = 12), 
+        axis.title.y = element_markdown(face="bold", size = 8),
+        text = element_text(family = "Times New Roman", size = 8), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "Mean % of *Av. paragallinarum*<br>proteins with no sequence similarity<br>to host proteins", 
+  labs(y = "Mean proportion of filtered proteins<br>across *Av. paragallinarum* strains (%)", 
        x = "COG category",
        tag = "B") +
   coord_flip() + 
@@ -214,7 +216,7 @@ p3A <- ggbetweenstats(
   x = Group,
   y = Ag_Percent,
   centrality.label.args = list(color = "transparent", size = 0, box.padding = 200),  
-  centrality.point.args = list(color = "#25482f", size = 6),
+  centrality.point.args = list(color = "#25482f", size = 4),
   point.args = list(
     position = ggplot2::position_jitterdodge(dodge.width = 0.6),
     alpha = 0.7, 
@@ -228,34 +230,35 @@ p3A <- ggbetweenstats(
     )),
     theme(
       axis.text = ggtext::element_markdown(
-        family = "Times New Roman", size = 13, color = "black",
+        family = "Times New Roman", size = 9, color = "black",
         fill = "white", box.colour = "white", linetype = "solid",
         linewidth = 1, halign = 0.5, valign = 0.5, 
         padding = margin(2, 4, 2, 4), r = unit(5, "pt"),
         align_widths = TRUE, align_heights = TRUE, 
         rotate_margins = TRUE
       ),
-      axis.title = ggtext::element_markdown(family = "Times New Roman",size = 13),
-      legend.text = ggtext::element_markdown(family = "Times New Roman",size = 12),
+      axis.title = ggtext::element_markdown(family = "Times New Roman",size = 8),
+      legend.text = ggtext::element_markdown(family = "Times New Roman",size = 7),
       legend.title = element_blank(),
+      axis.text.y = element_text(size = 7),
       axis.text.x = element_blank(),
-      axis.title.y.left = ggtext::element_markdown(family = "Times New Roman",size = 13),
+      axis.title.y.left = ggtext::element_markdown(family = "Times New Roman",size = 8),
       panel.background = element_rect(fill = "white"), 
       panel.grid.major = element_line(colour = "grey", linetype = "dotted", linewidth = 0.3),
       panel.grid.minor = element_blank(),
       legend.position = "bottom",
       legend.box = "vertical",
       legend.direction = "vertical",
-      plot.tag = element_text(family = "Times New Roman", size = 15)
+      plot.tag = element_text(family = "Times New Roman", size = 10)
     ),
     labs(
-      y = "% of antigenic proteins (with no<br>sequence similarity to host)",
+      y = "Filtered antigenic proteins (%)",
       tag = "A",
       x = ""
     )
   )
 ) + 
-  geom_point(aes(y = AgProt, color = "Experimental antigens"), size = 5, shape = 18)
+  geom_point(aes(y = AgProt, color = "Experimental antigens"), size = 4, shape = 18)
 
 
 p3A
@@ -325,16 +328,16 @@ p3C <- ggplot(means_ag, aes(fill=AntigenicityResult,
   theme(axis.title.x = ggtext::element_markdown(face="bold"), 
         axis.title.x.bottom = element_markdown(face="bold"), 
         axis.title.y = element_blank(),
-        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        axis.text = element_text(family = "Times New Roman", size = 6, color = "black"),
         axis.text.y = element_blank(),
         title = element_text(family = "Times New Roman"), 
         legend.title = element_blank(),
-        legend.text = ggtext::element_markdown(family = "Times New Roman", size=12),
-        text = element_text(family = "Times New Roman", size = 12), 
+        legend.text = ggtext::element_markdown(family = "Times New Roman", size = 7),
+        text = element_text(family = "Times New Roman", size = 8), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "% of experimental antigens<br>with no sequence similarity<br>to host proteins", 
+  labs(y = "Filtered experimental<br>antigens (%)", 
        x = "COG category",
        tag = "C") +
   coord_flip() + 
@@ -343,7 +346,7 @@ p3C <- ggplot(means_ag, aes(fill=AntigenicityResult,
 p3C
 
 layout <- '
-AAABBBBBBBB
+AAAABBBBBBBBB
 '
 
 patch <- p3A + plot_layout(guides = 'keep') 
@@ -353,12 +356,14 @@ patch2 <- (p3B | p3C) +
         legend.box = "vertical",
         legend.box.just = "bottom",
         legend.direction = "vertical",
-        legend.title = element_blank())
+        legend.title = element_blank(),
+        legend.key.size = unit(0.8, "line"))
 
-wrap_plots(A = patch, B = patch2, design = layout)
+final_plot <- wrap_plots(A = patch, B = patch2, design = layout) 
 
-ggsave("3A&B.png", device = "png", path = output_path, 
-       width =3500, height = 2200, units="px")
+
+ggsave("Figure_3.jpeg", device = "jpeg", path = output_path, 
+       width =190, height = 113, units="mm", dpi = 500, bg = "white")
 
 Mean_Percentage_Ag_Total <- Ag_Total %>%
   filter(AntigenicityResult == "ANTIGEN", 

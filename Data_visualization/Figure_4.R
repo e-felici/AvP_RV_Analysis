@@ -4,6 +4,8 @@ library(ggpubr)
 library(ggtext)
 library(patchwork)
 library(ggstatsplot)
+library(cowplot)
+library(grid)
 
 #Define paths
 results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
@@ -57,7 +59,7 @@ Mean_Percentage_Exp_Total <- Exp_Total %>%
 ##### Grafico Exposition ####
 #filtro
 Exposed <- filter(Results, AntigenicityResult ==  "ANTIGEN" & 
-                   Host_Homologue_Result_All ==  "Proteins with **no sequence similarity** to any protein in any host")
+                    Host_Homologue_Result_All ==  "Proteins with **no sequence similarity** to any protein in any host")
 
 SL_COG <- group_by(Exposed, SubcellularLocalization, Strain, COG_category_description) %>%
   summarise(Exposed_or_Not_proteins_COG=n())
@@ -85,9 +87,9 @@ Exposed<- left_join(Exposed,Strain_number, by = "Strain")
 #agrego columna porcentaje
 Exposed <- Exposed %>%
   mutate(
-Percentage_Exposed_or_Not = Exposed_or_Not_proteins * 100 / Total_Ag_proteins,
-Percentage_Total = Exposed_or_Not_proteins * 100 / Total_Number_of_proteins_per_Strain
-)
+    Percentage_Exposed_or_Not = Exposed_or_Not_proteins * 100 / Total_Ag_proteins,
+    Percentage_Total = Exposed_or_Not_proteins * 100 / Total_Number_of_proteins_per_Strain
+  )
 
 #cambio columna de character a factor
 Exposed$SubcellularLocalization = as.factor(Exposed$SubcellularLocalization )
@@ -141,12 +143,12 @@ means_SL$COG_category_description <- str_replace_all(means_SL$COG_category_descr
                                                      "Post-translational")
 
 means_SL$SubcellularLocalization <- str_replace_all(means_SL$SubcellularLocalization,
-                                                     "CytoplasmicMembrane",
-                                                     "Cytoplasmic membrane")
+                                                    "CytoplasmicMembrane",
+                                                    "Cytoplasmic<br>membrane")
 
 means_SL$SubcellularLocalization <- str_replace_all(means_SL$SubcellularLocalization,
                                                     "OuterMembrane",
-                                                    "Outer membrane")
+                                                    "Outer<br>membrane")
 
 COG_category_description_order <- c("Translation, ribosomal structure and biogenesis", 
                                     "RNA processing and modification", 
@@ -181,33 +183,48 @@ means_SL <- filter(means_SL, !is.na(COG_category_description))
 
 means_SL$SubcellularLocalization <- as.factor(means_SL$SubcellularLocalization)
 
+means_SL <- means_SL %>%
+  mutate(SubcellularLocalization = recode(SubcellularLocalization,
+                                          "Cellwall" = "Cell wall", 
+                                          "Cytoplasmic" = 'Cytoplasmic',
+                                          "CytoplasmicMembrane" = 'Cytoplasmic<br>membrane', 
+                                          "Extracellular" = 'Extracellular',
+                                          "OuterMembrane" = 'Outer<br>membrane',
+                                          "Periplasmic" = 'Periplasmic', 
+                                          "Unknown" = 'Unknown'))
+
 p4B <- ggplot(means_SL, aes(fill=factor(SubcellularLocalization, 
-                                       levels=c("Unknown", "Cytoplasmic", "Cytoplasmic membrane", 
-                                                "Periplasmic","Outer membrane",
-                                                "Extracellular","Cell wall")), 
-                           y=mean_value, x=fct_rev(factor(COG_category_description, 
-                                                          levels=COG_category_description_order)))) + 
+                                        levels=c("Unknown", "Cytoplasmic", "Cytoplasmic<br>membrane", 
+                                                 "Periplasmic","Outer<br>membrane",
+                                                 "Extracellular","Cell wall")), 
+                            y=mean_value, x=fct_rev(factor(COG_category_description, 
+                                                           levels=COG_category_description_order)))) + 
   geom_bar(position="stack", stat="identity") + 
   scale_fill_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
-                             "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
+                              "#25482f","olivedrab","#4f2f4a","#4d0f0b"),
+                    guide = guide_legend(nrow = 1)) +
   theme(axis.title = element_markdown(face="bold"), 
-                 axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
-                 title = element_text(family = "Times New Roman"), 
-                 legend.position= "bottom",
-                 legend.location = "plot",
-                 axis.title.x.bottom = element_markdown(face="bold"), 
-                 legend.byrow = T,
-                 legend.title = element_blank(),
-                 text = element_text(family = "Times New Roman", size = 14), 
-                 panel.background =  element_rect(fill = "white"), 
-                 panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
-                                                 linewidth = 0.3)) + 
-           labs(y = "Mean % of *Av. paragallinarum*<br> antigenic proteins with no sequence<br>similarity to host proteins", 
-                x = "COG category",
-                tag = "B") +
-           coord_flip() + 
-  ylim(0, 40)
-         
+        axis.text = element_text(family = "Times New Roman", size = 6, color = "black"),
+        title = element_text(family = "Times New Roman"), 
+        legend.text = element_markdown(face = "bold", size = 7),
+        legend.position= "bottom",
+        legend.location = "plot",
+        legend.box.just = "left",
+        axis.title.x.bottom = element_markdown(face="bold"), 
+        legend.key.size = unit(0.8, "line"),
+        legend.title = element_blank(),
+        plot.title.position = "plot",
+        text = element_text(family = "Times New Roman", size = 8), 
+        panel.background =  element_rect(fill = "white"), 
+        panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
+                                        linewidth = 0.3)) +
+  labs(y = "Mean proportion of filtered<br>proteins across *Av.<br>paragallinarum* strains (%)", 
+       x = "COG category",
+       tag = "B") +
+  scale_x_discrete(drop = FALSE) +
+  coord_flip() + 
+  ylim(0, 30)
+
 
 p4B
 
@@ -223,15 +240,15 @@ Exposed <- Exposed %>%
   mutate(SubcellularLocalization = recode(SubcellularLocalization,
                                           "Cellwall" = "Cell wall", 
                                           "Cytoplasmic" = 'Cytoplasmic',
-                                          "CytoplasmicMembrane" = 'Cytoplasmic\nmembrane', 
+                                          "CytoplasmicMembrane" = 'Cytoplasmic<br>membrane', 
                                           "Extracellular" = 'Extracellular',
-                                          "OuterMembrane" = 'Outer\nmembrane',
+                                          "OuterMembrane" = 'Outer<br>membrane',
                                           "Periplasmic" = 'Periplasmic', 
                                           "Unknown" = 'Unknown'))
 
 Exposed$SubcellularLocalization <- factor(Exposed$SubcellularLocalization, 
-                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nmembrane", 
-                                                   "Periplasmic","Outer\nmembrane",
+                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic<br>membrane", 
+                                                   "Periplasmic","Outer<br>membrane",
                                                    "Extracellular","Cell wall"))
 
 AgProt <- Exposed %>%
@@ -240,38 +257,39 @@ AgProt <- Exposed %>%
 Exposed <- Exposed %>%
   filter(Strain != "Experimental antigens")
 
-
 p4A <- ggplot(Exposed, aes(x = SubcellularLocalization, y = SL_Percent)) +
-  geom_violin(width = 1.4, aes(fill = SubcellularLocalization), alpha= 0.4) +
+  geom_violin(width = 1.4, aes(fill = SubcellularLocalization), alpha= 0.4, linewidth = 0.2) +
   scale_fill_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
-                              "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
+                              "#25482f","olivedrab","#4f2f4a","#4d0f0b"),
+                    labels = scales::label_wrap(8)) +
   geom_point(data=AgProt, aes(x=SubcellularLocalization, y=SL_Percent, 
                               color=SubcellularLocalization), 
-             size = 7, shape = 18) +
+             size = 4, shape = 18) +
   scale_color_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
-                               "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
+                               "#25482f","olivedrab","#4f2f4a","#4d0f0b"), 
+                     labels = scales::label_wrap(8)) +
   theme(
-    text = element_text(family = "Times New Roman", size = 14, color = "black"), 
-    axis.title = element_markdown(),
+    text = element_text(family = "Times New Roman", size = 8, color = "black"), 
+    axis.title = element_markdown(face = "bold"),
     legend.position = "none",
-    plot.caption = element_markdown(halign = 0, hjust = 0.95),
     legend.title = element_blank(),
     plot.tag.location = "margin",
+    axis.ticks = element_blank(),
     axis.title.y.left = element_markdown(face="bold"), 
-    axis.text.y = element_text(family = "Times New Roman", size = 14, color = "black"),
-    axis.title.y = element_text(family = "Times New Roman", size = 14, color = "black", face = "bold"),
-    axis.text.x = element_text(family = "Times New Roman", size = 14, color = "black",face = "bold"),
+    axis.text.y = element_blank(),
+    axis.title.x = element_markdown(family = "Times New Roman", size = 8, color = "black", face = "bold"),
+    axis.text.x = element_markdown(family = "Times New Roman", size = 8, color = "black"),
     panel.background = element_rect(fill = "white"), 
     panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                     linewidth = 0.3)
   ) + 
   labs(
-    y = "% of antigenic proteins with no<br>sequence similarity to host<br>in each localisation",
+    y = "Filtered proteins<br>per localisation (%)",
     tag = "A",
     x = "",
-    caption = "Violin plots: *Av. paragallinarum* strains<br>◆: Experimental Antigens  "
-  ) + 
-  ylim(0, 60)
+   ) + 
+  ylim(0, 60) + 
+  coord_flip() 
 
 p4A
 
@@ -324,60 +342,54 @@ means_SL <- means_SL %>%
   mutate(SubcellularLocalization = recode(SubcellularLocalization,
                                           "Cellwall" = "Cell wall", 
                                           "Cytoplasmic" = 'Cytoplasmic',
-                                          "CytoplasmicMembrane" = 'Cytoplasmic\nmembrane', 
+                                          "CytoplasmicMembrane" = 'Cytoplasmic<br>membrane', 
                                           "Extracellular" = 'Extracellular',
-                                          "OuterMembrane" = 'Outer\nmembrane',
+                                          "OuterMembrane" = 'Outer<br>membrane',
                                           "Periplasmic" = 'Periplasmic', 
                                           "Unknown" = 'Unknown'))
 
 means_SL$SubcellularLocalization <-  factor(means_SL$SubcellularLocalization, 
-                                          levels=c("Unknown", "Cytoplasmic", "Cytoplasmic\nmembrane", 
-                                                   "Periplasmic","Outer\nmembrane",
-                                                   "Extracellular","Cell wall"))
+                                            levels=c("Unknown", "Cytoplasmic", "Cytoplasmic<br>membrane", 
+                                                     "Periplasmic","Outer<br>membrane",
+                                                     "Extracellular","Cell wall"))
 
 p4C <- ggplot(means_SL, aes(fill=SubcellularLocalization,
                             y=mean_value, x=fct_rev(factor(COG_category_description, 
                                                            levels=COG_category_description_order)))) + 
   geom_bar(position="stack", stat="identity") + 
   scale_fill_manual(values =c("#e1ccd1","#9e2f28","sienna2" , "#deb867",
-                              "#25482f","olivedrab","#4f2f4a","#4d0f0b")) +
+                              "#25482f","olivedrab","#4f2f4a","#4d0f0b"),
+                    guide = guide_legend(nrow = 1)) +
   theme(axis.title = element_markdown(face="bold"), 
-        axis.text = element_text(family = "Times New Roman", size = 10, color = "black"),
+        axis.text = element_text(family = "Times New Roman", size = 6, color = "black"),
         title = element_text(family = "Times New Roman"), 
         legend.position= "none",      
         axis.title.x.bottom = element_markdown(face="bold"), 
         axis.text.y = element_blank(),
         axis.title.y = element_blank(),
         legend.title = element_blank(),
-        text = element_text(family = "Times New Roman", size = 14), 
+        legend.text = element_markdown(face = "bold", size = 7),
+        legend.key.size = unit(0.8, "line"),
+        text = element_text(family = "Times New Roman", size = 8), 
         panel.background =  element_rect(fill = "white"), 
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
                                         linewidth = 0.3)) + 
-  labs(y = "% of experimental antigens<br>(antigenic, with no sequence<br>similarity to host proteins)", 
+  labs(y = "Filtered experimental<br>antigens (%)", 
        x = "COG category",
-       tag = "C") +
+       tag = "C") +  
+  scale_x_discrete(drop = FALSE) +
   coord_flip() + 
-  ylim(0, 40)
+  ylim(0, 30)
 
 p4C
 
-
 layout <- '
-AAAA
-AAAA
-AAAA
-AAAA
-AAAA
-BBCC
-BBCC
-BBCC
-BBCC
-BBCC
-DD##
+AABC
 '
-wrap_plots(A = free(p4A), B = p4B, C= p4C, D = guide_area(), design = layout)  +
-  plot_layout(guides = 'collect')
+p4b <- p4B + plot_layout(guides = 'keep')
 
-ggsave("4A&B.png", device = "png", path = output_path, 
-       width =2900, height = 3000, units="px")
+final_plot <- wrap_plots(A = p4A, B = p4b, C =p4C, design = layout) 
+
+ggsave("Figure_4.jpeg", device = "jpeg", path = output_path, 
+       width =190, height = 110, units="mm", dpi = 500, bg = "white")
 

@@ -27,7 +27,7 @@ Exposed <- Exposed %>%
   summarise(Exposed_proteins = sum(Exposed_or_Not_proteins))
 
 Conserved <- Conserved %>%
-  filter(Conservation_Results == "**Conserved sequence** (CS > 0.80) +<br>**prevalent** in > 90 % of the strains") %>%  
+  filter(Conservation_Results == "**Conserved sequence<br>Prevalent**") %>%  
   group_by(Strain) %>%
   summarise(Conserved_proteins = sum(Conserved_or_Not_proteins))
 
@@ -108,13 +108,13 @@ ggparcoord(All,
            mapping = ggplot2::aes(linewidth = 1.5)
 ) +
   ggplot2::scale_linewidth_identity() +
-  scale_color_manual(values = c("olivedrab","#0073C2FF", "orangered3"))  +
+  scale_color_manual(values = c("olivedrab","#0073C2FF", "red3"))  +
   theme(axis.text.x=element_text(colour="black", face = "bold"),
         axis.text.y=element_text(colour="black"),
         axis.title.y = element_text(face = "bold"),
         text = element_text(family = "Times New Roman", size = 16), 
-        panel.background = element_rect(fill='transparent'),
-        plot.background = element_rect(fill='transparent', color=NA),
+        panel.background = element_rect(fill="white"),
+        plot.background = element_rect(fill="white", color = "white"),
         panel.grid.minor = element_blank(),
         legend.background = element_rect(fill='transparent'),
         panel.grid.major = element_line(colour = "grey", linetype = "dotted", 
@@ -130,8 +130,11 @@ ggparcoord(All,
   guides(alpha="none")
 
 
-ggsave("6.png", device = "png", path = output_path, 
-       width =2500, height = 2500, units="px", bg='transparent')
+
+ggsave("Figure_6.jpeg", device = "jpeg", path = output_path, 
+       width =190, height = 190, units="mm", dpi = 500, bg = "white")
+
+
 
 ###Note: manually fixed the experimental antigens column
 
