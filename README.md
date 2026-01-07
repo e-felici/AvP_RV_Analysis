@@ -84,6 +84,10 @@ The shell scripts are meant to be used in numerical order. Each script is detail
 
 ```
 .
+├── Ablation_scripts                              # Scripts for ablation analysis used to select sequence-similarity filtering thresholds
+│   ├── A.1-Ablation_homology.sh                  
+│   ├── A.2-Ablation_homology_AvP.R
+│   └── A.3-Ablation_homology_AgProtect.R         
 ├── AgProtect_data
 │   ├── Final_results-AgProtect.tsv               # RV Analysis Results of the experimentally tested antigens
 │   ├── protein.faa                               # Fasta file of the collection of experimentally tested antigens
@@ -96,7 +100,16 @@ The shell scripts are meant to be used in numerical order. Each script is detail
 ├── 2.AgProtect_RV_Analysis_RScripts              # R scripts for this step
 ├── 3.Final_RV_Analysis.sh                        # Final processing
 ├── 3.Final_RV_Analysis_RScripts                  # R script for the final step of the analysis
-├── VaxiJen.py                                    # Python Script for VaxiJen web scraping
+├── Data_visualization_scripts                    # R scripts to build the figures from the paper 
+├── Vaxijen_script
+│   └── VaxiJen.py                                # Python Script for VaxiJen web scraping
+├── Additional_data
+│   ├──COG
+│   │   └── cog_anot_manual.tbl                   # Adding PSSMs and COG categories that were missing
+│   ├──GCA_020892835.1
+│   │   └── protein.faa                           # Annotated genome
+│   └── VF_categories
+│       └── VF_categories.txt                     # Adding VF categories that were missing
 ├── All_Strains_Final_results                     # Polished output files
 │   ├── Conservation_results.tsv
 │   ├── Final_results-GCA_020892835.1.tsv
