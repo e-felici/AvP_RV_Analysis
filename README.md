@@ -1,4 +1,4 @@
-# Reverse Vaccinology for Infectious Coryza: Identifying Vaccine Targets against *Avibacterium paragallinarum*
+# Identification of candidate antigens for a vaccine against *Avibacterium paragallinarum* using reverse vaccinology
 
 This repository contains the scripts and workflows used in the identification and evaluation of antigen candidates for the development of a veterinary vaccine against *Avibacterium paragallinarum*, the causative agent of infectious coryza in chickens. 
 
