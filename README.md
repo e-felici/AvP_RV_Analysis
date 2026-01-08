@@ -24,6 +24,8 @@ This repository contains the scripts and workflows used in the identification an
      - [ggtext](https://cran.r-project.org/web/packages/ggtext/index.html) v. 0.1.2
      - [ggpubr](https://cran.r-project.org/web/packages/ggpubr/index.html) v. 0.6.0
      - [ggimage](https://cran.r-project.org/web/packages/ggimage/index.html) v. 0.3.3
+     - [ggstatsplot](https://cran.r-project.org/web/packages/ggstatsplot/index.html) v. 0.13.4
+     - [ggthemes](https://jrnold.github.io/ggthemes/index.html) v. 5.2.0
          
   - Python (at least v. 3.9.12) and these python packages:
     - [pyperclip v. 1.9.0](https://pypi.org/project/pyperclip/)
@@ -64,7 +66,7 @@ The shell scripts are meant to be used in numerical order. Each script is detail
    ./0.DB_creation.sh <path/to/database_directory>
    ```
 
-2. Create a file_of_paths (See [example]()). You only need one for use in all the scripts.
+2. Create a file_of_paths (See [example](https://github.com/e-felici/AvP_RV_Analysis/blob/main/file_of_paths_example.txt) and [notes](https://github.com/e-felici/AvP_RV_Analysis?tab=readme-ov-file#note-on-file_of_paths_exampletxt)). You only need one for use in all the scripts.
 
 3. Analyse the different *Av. paragallinarum* strains with 1.AvP_RV_Analysis.sh script:
    ```bash
@@ -80,6 +82,9 @@ The shell scripts are meant to be used in numerical order. Each script is detail
    ```bash
    ./3.Final_RV_Analysis.sh <path/to/file_of_paths>
    ```
+
+6. After that, you can execute the [scripts for data visualization](https://github.com/e-felici/AvP_RV_Analysis/tree/main/Data_visualization_scripts)
+ 
    
 ## File Structure
 
@@ -128,34 +133,24 @@ Do not leave blank spaces at the end of any line; each path must be followed onl
 
 #### `path/to/strains_folder`
 Directory containing all strains. Each strain must be in a separate subdirectory, and each subdirectory must contain the corresponding proteome file (`protein.faa`).
-
 #### `path/to/make_multi_seq.pl`
 Path to the [`make_multi_seq.pl`](https://github.com/weizhongli/cdhit/wiki/3.-User's-Guide#make_multi_seqpl) script (an auxiliary CD-HIT tool).
-
 #### `path/to/Conservation_Analysis_folder`
 Directory where all conservation and prevalence results across strains will be stored.
-
 #### `path/to/Final_Results_folder`
 Directory where the final, curated results will be stored.
-
 #### `path/to/BlastpDB_folder`
 Directory containing the BLASTp databases created using the `0.DB_creation.sh` script.
-
 #### `path/to/1.AvP_RV_Analysis_RScripts`
 Path to the [`1.AvP_RV_Analysis_RScripts` folder](https://github.com/e-felici/AvP_RV_Analysis/tree/main/1.AvP_RV_Analysis_RScripts).
-
 #### `path/to/Psortb_docker_script.pl`
 Path to the [Perl wrapper script](https://raw.githubusercontent.com/brinkmanlab/psortb_commandline_docker/master/psortb) used to execute PSORTb via a `docker run` command.
-
 #### `path/to/SPAAN_folder`
 Directory containing all files required to run SPAAN in standalone mode.
-
 #### `path/to/VaxiJen.py`
 Path to the [`VaxiJen.py` script](https://github.com/e-felici/AvP_RV_Analysis/blob/main/VaxiJen_script/VaxiJen.py).
-
 #### `path/to/Chromedriver_binary`
 Path to the Chromedriver binary.
-
 #### `path/to/COG_folder_with_COG-CDD_resources`
 Directory containing the COG/CDD resources, including:
 * `rpsblast` and `rpsbproc` binaries
@@ -165,23 +160,18 @@ Directory containing the COG/CDD resources, including:
   * `cog-24.def.tab`
   * `family_superfamily_links`
 * A `db` directory containing the extracted COG preformatted database from the `little_endian` directory
-
 #### `path/to/AgProtect_data`
 Path to the [experimental antigens folder (`AgProtect_data`)](https://github.com/e-felici/AvP_RV_Analysis/tree/main/AgProtect_data).
-
 #### `path/to/2.AgProtect_RV_Analysis_RScripts`
 Path to the [`2.AgProtect_RV_Analysis_RScripts` folder](https://github.com/e-felici/AvP_RV_Analysis/tree/main/2.AgProtect_RV_Analysis_RScripts).
-
 #### `path/to/GramAdvanced_folder`
 Directory containing two files: `GramPositiveWithOM` and `GramNegativeWithoutOM`.
 Each file must correspond to the output obtained after running PSORTb on the experimental antigens FASTA file via the [PSORTb sequence submission page](https://www.psort.org/psortb/), using:
 * **GramPositiveWithOM**: “Positive with outer membrane”
 * **GramNegativeWithoutOM**: “Negative without outer membrane”
 In both cases, results must be downloaded in **Short Format (tab-delimited)**.
-
 #### `path/to/3.Final_RV_Analysis_RScripts`
 Path to the [`3.Final_RV_Analysis_RScripts` folder](https://github.com/e-felici/AvP_RV_Analysis/tree/main/3.Final_RV_Analysis_RScripts).
-
 #### `path/to/VF_categories.txt`
 Path to the [`VF_categories.txt` file](https://github.com/e-felici/AvP_RV_Analysis/blob/main/Additional_data/VF_categories/VF_categories.txt).
 
