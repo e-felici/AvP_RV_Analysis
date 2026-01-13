@@ -1,6 +1,6 @@
 path/to/strains_folder
 path/to/make_multi_seq.pl
-path/to/Conservation_Analysis_Dir
+path/to/Conservation_Analysis_folder
 path/to/Final_Results_folder
 path/to/BlastpDB_folder
 path/to/1.AvP_RV_Analysis_RScripts
@@ -9,7 +9,8 @@ path/to/SPAAN_folder
 path/to/VaxiJen.py
 path/to/Chromedriver_binary
 path/to/COG_folder_with_COG-CDD_resources
-path/to/AgProtect_folder
+path/to/AgProtect_data
 path/to/2.AgProtect_RV_Analysis_RScripts
 path/to/GramAdvanced_folder
 path/to/3.Final_RV_Analysis_RScripts
+path/to/VF_categories.txt
