@@ -5,7 +5,6 @@ library(ggpubr)
 library(patchwork)
 library(ggtext)
 library(ggstatsplot)
-library(taylor)
 
 
 #Define paths
