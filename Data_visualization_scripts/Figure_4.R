@@ -4,8 +4,6 @@ library(ggpubr)
 library(ggtext)
 library(patchwork)
 library(ggstatsplot)
-library(cowplot)
-library(grid)
 
 #Define paths
 results_path <- "~/Busqueda_antigenos/All_Final_results/AllStrains_AgProtect_Final_results.tsv"
